@@ -1,0 +1,677 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://scripts/main.gd" id="1"]
+[ext_resource type="Theme" path="res://resources/neon_theme.tres" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/arena.tscn" id="3"]
+[ext_resource type="Shader" path="res://shaders/background.gdshader" id="4"]
+[ext_resource type="FontFile" path="res://assets/fonts/Display.ttf" id="5"]
+[ext_resource type="PackedScene" path="res://scenes/rink.tscn" id="6"]
+[ext_resource type="PackedScene" path="res://scenes/paddle.tscn" id="7"]
+[ext_resource type="PackedScene" path="res://scenes/puck.tscn" id="8"]
+
+[sub_resource type="ShaderMaterial" id="BackgroundMaterial"]
+shader = ExtResource("4")
+
+[sub_resource type="StyleBoxFlat" id="Primary"]
+bg_color = Color(0.18, 0.9, 1, 1)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_left = 16
+corner_radius_bottom_right = 16
+
+[node name="GHockey" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2")
+mouse_filter = 2
+script = ExtResource("1")
+
+[node name="Background" type="ColorRect" parent="."]
+material = SubResource("BackgroundMaterial")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Content" type="Control" parent="."]
+layout_mode = 0
+offset_right = 720.0
+offset_bottom = 1280.0
+mouse_filter = 2
+
+[node name="Arena" parent="Content" instance=ExtResource("3")]
+visible = false
+
+[node name="Menu" type="Control" parent="Content"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 720.0
+offset_bottom = 1280.0
+visible = false
+mouse_filter = 2
+
+[node name="Eyebrow" type="Label" parent="Content/Menu"]
+layout_mode = 0
+offset_left = 72.0
+offset_top = 150.0
+offset_right = 648.0
+offset_bottom = 185.0
+mouse_filter = 2
+text = "THE NEON ARCADE"
+theme_override_font_sizes/font_size = 19
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(0.2, 0.9, 1, 1)
+theme_override_fonts/font = ExtResource("5")
+
+[node name="Title" type="Label" parent="Content/Menu"]
+layout_mode = 0
+offset_left = 40.0
+offset_top = 198.0
+offset_right = 680.0
+offset_bottom = 296.0
+mouse_filter = 2
+text = "G-HOCKEY"
+theme_override_font_sizes/font_size = 78
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_fonts/font = ExtResource("5")
+
+[node name="Tagline" type="Label" parent="Content/Menu"]
+layout_mode = 0
+offset_left = 72.0
+offset_top = 300.0
+offset_right = 648.0
+offset_bottom = 340.0
+mouse_filter = 2
+text = "Light up the rink."
+theme_override_font_sizes/font_size = 26
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(0.45, 0.6, 0.69, 1)
+
+[node name="Preview" type="Node2D" parent="Content/Menu"]
+position = Vector2(198, 332)
+scale = Vector2(0.45, 0.45)
+
+[node name="Rink" parent="Content/Menu/Preview" instance=ExtResource("6")]
+
+[node name="CyanPaddle" parent="Content/Menu/Preview" instance=ExtResource("7")]
+position = Vector2(270, 920)
+
+[node name="PinkPaddle" parent="Content/Menu/Preview" instance=ExtResource("7")]
+position = Vector2(450, 430)
+neon_color = Color(1, 0.22, 0.55, 1)
+
+[node name="Puck" parent="Content/Menu/Preview" instance=ExtResource("8")]
+position = Vector2(365, 680)
+modulate = Color(0.86, 1, 0.7, 1)
+
+[node name="OnePlayer" type="Button" parent="Content/Menu" groups=["menu_buttons"]]
+layout_mode = 0
+offset_left = 96.0
+offset_top = 866.0
+offset_right = 624.0
+offset_bottom = 942.0
+text = "1 PLAYER"
+theme_override_styles/normal = SubResource("Primary")
+theme_override_colors/font_color = Color(0.02, 0.065, 0.10, 1)
+
+[node name="TwoPlayers" type="Button" parent="Content/Menu" groups=["menu_buttons"]]
+layout_mode = 0
+offset_left = 96.0
+offset_top = 958.0
+offset_right = 624.0
+offset_bottom = 1034.0
+text = "2 PLAYERS"
+
+[node name="Settings" type="Button" parent="Content/Menu" groups=["menu_buttons"]]
+layout_mode = 0
+offset_left = 96.0
+offset_top = 1050.0
+offset_right = 348.0
+offset_bottom = 1118.0
+text = "SETTINGS"
+
+[node name="Quit" type="Button" parent="Content/Menu" groups=["menu_buttons"]]
+layout_mode = 0
+offset_left = 372.0
+offset_top = 1050.0
+offset_right = 624.0
+offset_bottom = 1118.0
+text = "QUIT"
+
+[node name="Footer" type="Label" parent="Content/Menu"]
+layout_mode = 0
+offset_left = 40.0
+offset_top = 1190.0
+offset_right = 680.0
+offset_bottom = 1230.0
+mouse_filter = 2
+text = "OFFLINE  /  ORIGINAL SYNTH SOUND  /  PURE PLAY"
+theme_override_font_sizes/font_size = 16
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(0.45, 0.6, 0.69, 1)
+
+[node name="Setup" type="Control" parent="Content"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 720.0
+offset_bottom = 1280.0
+visible = false
+mouse_filter = 2
+
+[node name="Card" type="Panel" parent="Content/Setup"]
+layout_mode = 0
+offset_left = 64.0
+offset_top = 232.0
+offset_right = 656.0
+offset_bottom = 1074.0
+mouse_filter = 2
+
+[node name="Eyebrow" type="Label" parent="Content/Setup"]
+layout_mode = 0
+offset_left = 96.0
+offset_top = 270.0
+offset_right = 624.0
+offset_bottom = 302.0
+mouse_filter = 2
+text = "CHOOSE YOUR CHALLENGE"
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(0.2, 0.9, 1, 1)
+theme_override_fonts/font = ExtResource("5")
+
+[node name="Title" type="Label" parent="Content/Setup"]
+layout_mode = 0
+offset_left = 96.0
+offset_top = 316.0
+offset_right = 624.0
+offset_bottom = 376.0
+mouse_filter = 2
+text = "SOLO MATCH"
+theme_override_font_sizes/font_size = 42
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_fonts/font = ExtResource("5")
+
+[node name="Description" type="Label" parent="Content/Setup"]
+layout_mode = 0
+offset_left = 96.0
+offset_top = 386.0
+offset_right = 624.0
+offset_bottom = 421.0
+mouse_filter = 2
+text = "You vs. the machine"
+theme_override_font_sizes/font_size = 24
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(0.45, 0.6, 0.69, 1)
+
+[node name="DifficultyLabel" type="Label" parent="Content/Setup"]
+layout_mode = 0
+offset_left = 104.0
+offset_top = 464.0
+offset_right = 616.0
+offset_bottom = 496.0
+mouse_filter = 2
+text = "DIFFICULTY"
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 0
+vertical_alignment = 1
+theme_override_colors/font_color = Color(0.45, 0.6, 0.69, 1)
+theme_override_fonts/font = ExtResource("5")
+
+[node name="Difficulty" type="OptionButton" parent="Content/Setup"]
+layout_mode = 0
+offset_left = 96.0
+offset_top = 510.0
+offset_right = 624.0
+offset_bottom = 582.0
+item_count = 4
+selected = 1
+popup/item_0/text = "Easy"
+popup/item_0/id = 0
+popup/item_1/text = "Normal"
+popup/item_1/id = 1
+popup/item_2/text = "Hard"
+popup/item_2/id = 2
+popup/item_3/text = "Expert"
+popup/item_3/id = 3
+
+[node name="ScoreLabel" type="Label" parent="Content/Setup"]
+layout_mode = 0
+offset_left = 104.0
+offset_top = 622.0
+offset_right = 616.0
+offset_bottom = 654.0
+mouse_filter = 2
+text = "GOALS TO WIN"
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 0
+vertical_alignment = 1
+theme_override_colors/font_color = Color(0.45, 0.6, 0.69, 1)
+theme_override_fonts/font = ExtResource("5")
+
+[node name="ScoreTarget" type="OptionButton" parent="Content/Setup"]
+layout_mode = 0
+offset_left = 96.0
+offset_top = 666.0
+offset_right = 624.0
+offset_bottom = 738.0
+item_count = 4
+selected = 2
+popup/item_0/text = "3 goals"
+popup/item_0/id = 0
+popup/item_1/text = "5 goals"
+popup/item_1/id = 1
+popup/item_2/text = "7 goals"
+popup/item_2/id = 2
+popup/item_3/text = "10 goals"
+popup/item_3/id = 3
+
+[node name="Hint" type="Label" parent="Content/Setup"]
+layout_mode = 0
+offset_left = 96.0
+offset_top = 768.0
+offset_right = 624.0
+offset_bottom = 860.0
+mouse_filter = 2
+text = "Drag on your half to move.\nStrike the puck into the top goal."
+theme_override_font_sizes/font_size = 23
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(0.45, 0.6, 0.69, 1)
+
+[node name="Start" type="Button" parent="Content/Setup" groups=["menu_buttons"]]
+layout_mode = 0
+offset_left = 96.0
+offset_top = 882.0
+offset_right = 624.0
+offset_bottom = 958.0
+text = "ENTER THE RINK"
+theme_override_styles/normal = SubResource("Primary")
+theme_override_colors/font_color = Color(0.02, 0.065, 0.10, 1)
+
+[node name="Back" type="Button" parent="Content/Setup" groups=["menu_buttons"]]
+layout_mode = 0
+offset_left = 96.0
+offset_top = 978.0
+offset_right = 624.0
+offset_bottom = 1042.0
+text = "BACK"
+
+[node name="SettingsPanel" type="Control" parent="Content"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 720.0
+offset_bottom = 1280.0
+visible = false
+mouse_filter = 2
+
+[node name="Card" type="Panel" parent="Content/SettingsPanel"]
+layout_mode = 0
+offset_left = 64.0
+offset_top = 228.0
+offset_right = 656.0
+offset_bottom = 1118.0
+mouse_filter = 2
+
+[node name="Eyebrow" type="Label" parent="Content/SettingsPanel"]
+layout_mode = 0
+offset_left = 96.0
+offset_top = 272.0
+offset_right = 624.0
+offset_bottom = 304.0
+mouse_filter = 2
+text = "MAKE IT YOURS"
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(0.2, 0.9, 1, 1)
+theme_override_fonts/font = ExtResource("5")
+
+[node name="Title" type="Label" parent="Content/SettingsPanel"]
+layout_mode = 0
+offset_left = 96.0
+offset_top = 318.0
+offset_right = 624.0
+offset_bottom = 376.0
+mouse_filter = 2
+text = "SETTINGS"
+theme_override_font_sizes/font_size = 42
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_fonts/font = ExtResource("5")
+
+[node name="MusicLabel" type="Label" parent="Content/SettingsPanel"]
+layout_mode = 0
+offset_left = 104.0
+offset_top = 426.0
+offset_right = 616.0
+offset_bottom = 461.0
+mouse_filter = 2
+text = "MUSIC VOLUME"
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 0
+vertical_alignment = 1
+theme_override_colors/font_color = Color(0.45, 0.6, 0.69, 1)
+theme_override_fonts/font = ExtResource("5")
+
+[node name="Music" type="HSlider" parent="Content/SettingsPanel"]
+layout_mode = 0
+offset_left = 104.0
+offset_top = 480.0
+offset_right = 616.0
+offset_bottom = 528.0
+step = 1.0
+value = 55.0
+
+[node name="SoundsLabel" type="Label" parent="Content/SettingsPanel"]
+layout_mode = 0
+offset_left = 104.0
+offset_top = 568.0
+offset_right = 616.0
+offset_bottom = 603.0
+mouse_filter = 2
+text = "SOUND EFFECTS"
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 0
+vertical_alignment = 1
+theme_override_colors/font_color = Color(0.45, 0.6, 0.69, 1)
+theme_override_fonts/font = ExtResource("5")
+
+[node name="Sounds" type="HSlider" parent="Content/SettingsPanel"]
+layout_mode = 0
+offset_left = 104.0
+offset_top = 620.0
+offset_right = 616.0
+offset_bottom = 668.0
+step = 1.0
+value = 80.0
+
+[node name="Vibration" type="CheckButton" parent="Content/SettingsPanel"]
+layout_mode = 0
+offset_left = 96.0
+offset_top = 726.0
+offset_right = 624.0
+offset_bottom = 790.0
+text = "Goal vibration"
+button_pressed = true
+
+[node name="Shake" type="CheckButton" parent="Content/SettingsPanel"]
+layout_mode = 0
+offset_left = 96.0
+offset_top = 804.0
+offset_right = 624.0
+offset_bottom = 868.0
+text = "Screen shake"
+button_pressed = true
+
+[node name="Reduced" type="CheckButton" parent="Content/SettingsPanel"]
+layout_mode = 0
+offset_left = 96.0
+offset_top = 882.0
+offset_right = 624.0
+offset_bottom = 946.0
+text = "Reduced effects"
+button_pressed = false
+
+[node name="Status" type="Label" parent="Content/SettingsPanel"]
+layout_mode = 0
+offset_left = 96.0
+offset_top = 958.0
+offset_right = 624.0
+offset_bottom = 998.0
+mouse_filter = 2
+text = "Saved on this device."
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(0.45, 0.6, 0.69, 1)
+
+[node name="Back" type="Button" parent="Content/SettingsPanel" groups=["menu_buttons"]]
+layout_mode = 0
+offset_left = 96.0
+offset_top = 1018.0
+offset_right = 624.0
+offset_bottom = 1086.0
+text = "SAVE & BACK"
+theme_override_styles/normal = SubResource("Primary")
+theme_override_colors/font_color = Color(0.02, 0.065, 0.10, 1)
+
+[node name="HUD" type="Control" parent="Content"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 720.0
+offset_bottom = 1280.0
+visible = false
+mouse_filter = 2
+
+[node name="Brand" type="Label" parent="Content/HUD"]
+layout_mode = 0
+offset_left = 56.0
+offset_top = 34.0
+offset_right = 326.0
+offset_bottom = 68.0
+mouse_filter = 2
+text = "G-HOCKEY"
+theme_override_font_sizes/font_size = 23
+horizontal_alignment = 0
+vertical_alignment = 1
+theme_override_fonts/font = ExtResource("5")
+
+[node name="Pause" type="Button" parent="Content/HUD" groups=["menu_buttons"]]
+layout_mode = 0
+offset_left = 514.0
+offset_top = 26.0
+offset_right = 664.0
+offset_bottom = 84.0
+text = "PAUSE"
+
+[node name="TopName" type="Label" parent="Content/HUD"]
+layout_mode = 0
+offset_left = 60.0
+offset_top = 108.0
+offset_right = 300.0
+offset_bottom = 138.0
+mouse_filter = 2
+text = "NORMAL AI"
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(1, 0.22, 0.55, 1)
+theme_override_fonts/font = ExtResource("5")
+
+[node name="TopScore" type="Label" parent="Content/HUD"]
+layout_mode = 0
+offset_left = 60.0
+offset_top = 140.0
+offset_right = 300.0
+offset_bottom = 205.0
+mouse_filter = 2
+text = "0"
+theme_override_font_sizes/font_size = 52
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(1, 0.22, 0.55, 1)
+theme_override_fonts/font = ExtResource("5")
+
+[node name="Versus" type="Label" parent="Content/HUD"]
+layout_mode = 0
+offset_left = 310.0
+offset_top = 140.0
+offset_right = 410.0
+offset_bottom = 180.0
+mouse_filter = 2
+text = "VS"
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(0.45, 0.6, 0.69, 1)
+theme_override_fonts/font = ExtResource("5")
+
+[node name="BottomName" type="Label" parent="Content/HUD"]
+layout_mode = 0
+offset_left = 420.0
+offset_top = 108.0
+offset_right = 660.0
+offset_bottom = 138.0
+mouse_filter = 2
+text = "YOU"
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(0.2, 0.9, 1, 1)
+theme_override_fonts/font = ExtResource("5")
+
+[node name="BottomScore" type="Label" parent="Content/HUD"]
+layout_mode = 0
+offset_left = 420.0
+offset_top = 140.0
+offset_right = 660.0
+offset_bottom = 205.0
+mouse_filter = 2
+text = "0"
+theme_override_font_sizes/font_size = 52
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(0.2, 0.9, 1, 1)
+theme_override_fonts/font = ExtResource("5")
+
+[node name="Rule" type="Label" parent="Content/HUD"]
+layout_mode = 0
+offset_left = 72.0
+offset_top = 1170.0
+offset_right = 648.0
+offset_bottom = 1204.0
+mouse_filter = 2
+text = "FIRST TO 7 / SOLO"
+theme_override_font_sizes/font_size = 20
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_fonts/font = ExtResource("5")
+
+[node name="Hint" type="Label" parent="Content/HUD"]
+layout_mode = 0
+offset_left = 72.0
+offset_top = 1212.0
+offset_right = 648.0
+offset_bottom = 1244.0
+mouse_filter = 2
+text = "DRAG YOUR HALF TO MOVE"
+theme_override_font_sizes/font_size = 16
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(0.45, 0.6, 0.69, 1)
+
+[node name="Countdown" type="Label" parent="Content"]
+layout_mode = 0
+offset_left = 72.0
+offset_top = 586.0
+offset_right = 648.0
+offset_bottom = 746.0
+mouse_filter = 2
+text = ""
+theme_override_font_sizes/font_size = 88
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_fonts/font = ExtResource("5")
+
+[node name="Overlay" type="Control" parent="Content"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 720.0
+offset_bottom = 1280.0
+visible = false
+mouse_filter = 2
+
+[node name="Dim" type="ColorRect" parent="Content/Overlay"]
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 720.0
+offset_bottom = 1280.0
+color = Color(0.005, 0.015, 0.03, 0.78)
+
+[node name="Card" type="Panel" parent="Content/Overlay"]
+layout_mode = 0
+offset_left = 64.0
+offset_top = 360.0
+offset_right = 656.0
+offset_bottom = 970.0
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="Content/Overlay"]
+layout_mode = 0
+offset_left = 96.0
+offset_top = 398.0
+offset_right = 624.0
+offset_bottom = 463.0
+mouse_filter = 2
+text = "TAKE A BREATHER"
+theme_override_font_sizes/font_size = 35
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_fonts/font = ExtResource("5")
+
+[node name="Subtitle" type="Label" parent="Content/Overlay"]
+layout_mode = 0
+offset_left = 96.0
+offset_top = 478.0
+offset_right = 624.0
+offset_bottom = 563.0
+mouse_filter = 2
+text = "Your match is paused."
+theme_override_font_sizes/font_size = 25
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(0.45, 0.6, 0.69, 1)
+
+[node name="Resume" type="Button" parent="Content/Overlay" groups=["menu_buttons"]]
+layout_mode = 0
+offset_left = 96.0
+offset_top = 586.0
+offset_right = 624.0
+offset_bottom = 662.0
+text = "RESUME"
+theme_override_styles/normal = SubResource("Primary")
+theme_override_colors/font_color = Color(0.02, 0.065, 0.10, 1)
+
+[node name="Restart" type="Button" parent="Content/Overlay" groups=["menu_buttons"]]
+layout_mode = 0
+offset_left = 96.0
+offset_top = 678.0
+offset_right = 624.0
+offset_bottom = 748.0
+text = "RESTART MATCH"
+
+[node name="Settings" type="Button" parent="Content/Overlay" groups=["menu_buttons"]]
+layout_mode = 0
+offset_left = 96.0
+offset_top = 764.0
+offset_right = 624.0
+offset_bottom = 834.0
+text = "SETTINGS"
+
+[node name="Menu" type="Button" parent="Content/Overlay" groups=["menu_buttons"]]
+layout_mode = 0
+offset_left = 96.0
+offset_top = 850.0
+offset_right = 624.0
+offset_bottom = 920.0
+text = "MAIN MENU"

@@ -1,0 +1,9 @@
+[gd_resource type="Resource" script_class="MatchOptions" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/match_options.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+player_count = 1
+difficulty = 1
+winning_score_index = 2

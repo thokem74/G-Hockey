@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="AIProfile" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ai_profile.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+display_name = "Hard"
+reaction_seconds = 0.085
+movement_speed = 960.0
+aiming_error = 18.0
+prediction_weight = 0.8

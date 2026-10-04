@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+ <defs>
+  <radialGradient id="bg"><stop stop-color="#123140"/><stop offset="1" stop-color="#060c17"/></radialGradient>
+  <filter id="glow"><feGaussianBlur stdDeviation="9"/></filter>
+ </defs>
+ <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+ <g fill="none" stroke-width="12">
+  <path d="M104 260V112H220M292 112H408V260" stroke="#ff388c"/>
+  <path d="M104 252V400H220M292 400H408V252" stroke="#35e5ff"/>
+  <path d="M112 256H400" stroke="#27455b" stroke-width="4"/>
+ </g>
+ <g fill="none" filter="url(#glow)" stroke-width="18">
+  <circle cx="206" cy="332" r="43" stroke="#35e5ff"/>
+  <circle cx="306" cy="181" r="43" stroke="#ff388c"/>
+ </g>
+ <g stroke-width="7" fill="#091524">
+  <circle cx="206" cy="332" r="43" stroke="#35e5ff"/>
+  <circle cx="306" cy="181" r="43" stroke="#ff388c"/>
+  <circle cx="262" cy="256" r="19" stroke="#c6ff9c"/>
+ </g>
+ <g fill="none" stroke-width="2"><circle cx="206" cy="332" r="30" stroke="#35e5ff"/><circle cx="306" cy="181" r="30" stroke="#ff388c"/></g>
+</svg>
