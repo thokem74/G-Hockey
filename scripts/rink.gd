@@ -29,7 +29,6 @@ func apply_layout(layout: RinkLayout) -> void:
 		get_node("GridHorizontal%d" % index).points = PackedVector2Array([Vector2(left, y), Vector2(right, y)])
 
 func _set_rail(rail_name: String, points: PackedVector2Array) -> void:
-	get_node(rail_name + "Glow").points = points
 	get_node(rail_name + "Edge").points = points
 
 func _set_goal(goal: Polygon2D, layout: RinkLayout, y: float) -> void:

@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1"]
 [ext_resource type="Theme" path="res://resources/neon_theme.tres" id="2"]
@@ -8,6 +8,17 @@
 [ext_resource type="PackedScene" path="res://scenes/rink.tscn" id="6"]
 [ext_resource type="PackedScene" path="res://scenes/paddle.tscn" id="7"]
 [ext_resource type="PackedScene" path="res://scenes/puck.tscn" id="8"]
+
+[sub_resource type="Environment" id="NeonEnvironment"]
+resource_local_to_scene = true
+background_mode = 3
+background_canvas_max_layer = 0
+glow_enabled = true
+glow_levels/3 = 1.0
+glow_levels/5 = 0.0
+glow_intensity = 0.6
+glow_bloom = 0.0
+glow_hdr_threshold = 1.0
 
 [sub_resource type="ShaderMaterial" id="BackgroundMaterial"]
 shader = ExtResource("4")
@@ -43,6 +54,9 @@ grow_vertical = 2
 theme = ExtResource("2")
 mouse_filter = 2
 script = ExtResource("1")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("NeonEnvironment")
 
 [node name="Background" type="ColorRect" parent="."]
 material = SubResource("BackgroundMaterial")

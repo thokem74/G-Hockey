@@ -47,7 +47,7 @@ Open the scenes in the editor to inspect or change their default appearance.
 | `scenes/audio.tscn`, `scripts/audio.gd` | Looping music and an eight-voice effects pool |
 | `scripts/settings.gd` | Saved user preferences |
 | `resources/default_match.tres` | Default match configuration |
-| `resources/neon_theme.tres`, `shaders/` | Shared UI styles and inexpensive glow/background shaders |
+| `resources/neon_theme.tres`, `resources/neon_emission.tres`, `shaders/` | Shared UI styles, selective HDR emission, and background shader |
 
 ### Tune gameplay
 
@@ -80,9 +80,19 @@ along its path, and resolves circles against the paddles, goal posts, and walls.
 This avoids tunneling without depending on a heavyweight rigid-body setup.
 Only the decorative rink moves during screen shake, keeping input stable.
 
-The Compatibility renderer is selected for this 2D game. Its scene-based glow
-works without HDR or Vulkan bloom. Reduced effects removes halos, particles,
-trails, and screen shake while keeping clear outlines and all gameplay rules.
+The Mobile renderer is selected for desktop testing and Android, with HDR 2D
+rendering and selective bloom. Android requires Vulkan support; automatic
+Compatibility/OpenGL fallback is disabled. This is internal HDR rendering and
+works on ordinary SDR phone displays without requiring an HDR screen.
+
+The editor-visible `WorldEnvironment` in `scenes/main.tscn` controls bloom.
+Neon outlines, trails, and particles use `resources/neon_emission.tres`, with
+an emission strength of 2.5, while UI and dark object interiors retain ordinary
+brightness. The Environment uses Canvas background mode, an HDR threshold of
+1.0, bloom of 0.0, glow intensity of 0.6, and the third blur level. No full-screen
+bloom is added to ordinary colors. Reduced effects disables glow, returns neon
+emission to 1.0, and removes particles, trails, and screen shake while keeping
+clear outlines and all gameplay rules. HDR stays enabled.
 
 ## Android build
 
@@ -96,7 +106,8 @@ godot --headless --path . --export-debug Android builds/G-Hockey-debug.apk
 ```
 
 The preset uses portrait orientation, immersive edge-to-edge display, the package ID
-`com.ghockey.game`, version `0.1.0`, ARM64 for devices, and x86-64 for emulators.
+`com.ghockey.game`, version `0.1.0`, and ARM64 for devices. The current preset
+has x86-64 disabled; enable it to export for an x86-64 Vulkan-capable emulator.
 Vibration is the only requested permission. It contains no ads, networking,
 accounts, purchases, or external services.
 
@@ -134,13 +145,37 @@ It captures menus, settings, match screens, countdown, pause, results, and
 phone/tablet layouts to `/tmp/ghockey-*.png`. Tests and audio-generation tools
 are excluded from Android exports.
 
-Current validation for the full-display update: **341 gameplay checks passed**
+Current validation for the Mobile/HDR migration: **494 gameplay checks passed**,
+including bloom and emission state at startup, both gameplay and menu preview,
+Reduced effects, and settings persistence. The Mobile/Vulkan visual sequence
+produced 36 captures at 720 × 1280, 720 × 1620, and 960 × 1280. Menus, gameplay,
+countdowns, pause, results, particle/trail effects, and reduced-effects layouts
+were inspected. HDR captures are converted from linear color to sRGB before
+saving PNGs.
+
+The Mobile/HDR debug APK was exported, installed, and tested on **2026-10-04**
+on the **Samsung SM-A176B, Android 16, Mali-G68, 1080 × 2340**. Logs confirmed
+**Mobile with Vulkan 1.3.219**. Device captures showed colored bloom, circular
+paddles, and readable scores and overlays. A paddle gesture moved the paddle,
+a score tap paused the match, Resume returned to play, and returning from the
+background left the match paused. The desktop captures also verify the resume
+countdown. The additional final-build device countdown capture was not completed.
+
+A final short SurfaceFlinger sample of 126 frame intervals measured **47.84 FPS**,
+with a median interval of 16.698 ms, a 95th percentile of 33.348 ms, and 32
+intervals above 25 ms. **The 60 FPS target is not met on this phone with HDR bloom.**
+This sample does not establish sustained performance; further GPU profiling and
+rendering optimization are needed. Removing the fifth bloom blur level did not
+materially improve this device sample.
+
+The following full-display validation predates the Mobile/HDR migration and used
+the Compatibility renderer: **341 gameplay checks passed**
 across 720 × 1280, 720 × 1560, 720 × 1620, and 960 × 1280 viewports. Rendered
 phone, tall-phone, and tablet layouts were inspected. Tests cover both score
 buttons in both game modes, touch and mouse dispatch, goal and wall collisions,
 AI court limits, active resizing, safe-area placement, and full-display dimming.
 
-The updated debug APK was installed and tested on **2026-10-04** on a real
+The previous Compatibility debug APK was installed and tested on **2026-10-04** on a real
 **Samsung SM-A176B, Android 16, Mali-G68, 1080 × 2340**. Screenshots confirmed
 full-display field coverage, circular paddles, readable scores, and centered
 overlays. Both score buttons opened pause, Resume showed the countdown, and

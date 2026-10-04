@@ -38,12 +38,21 @@ func drag(index: int, point: Vector2) -> void:
 
 func _run() -> void:
 	viewport = SubViewport.new()
+	viewport.use_hdr_2d = true
 	viewport.size = Vector2i(720, 1280)
 	get_tree().root.add_child(viewport)
+	var previous_reduced := Settings.reduced_effects
+	Settings.reduced_effects = true
 	main = load("res://scenes/main.tscn").instantiate() as Control
 	viewport.add_child(main)
 	await get_tree().process_frame
 	arena = main.get_node("Gameplay/Arena") as HockeyArena
+	_test_bloom(true)
+	Settings.reduced_effects = false
+	main._apply_feedback_visibility()
+	_test_bloom(false)
+	Settings.reduced_effects = previous_reduced
+	main._apply_feedback_visibility()
 	arena.state_changed.connect(func() -> void:
 		if arena.state == HockeyArena.State.PAUSED:
 			pause_transitions += 1
@@ -264,6 +273,18 @@ func _test_ai() -> void:
 	for value in [-4000, 5000]:
 		check(arena.ai.reflected_x(value) >= puck_bounds.position.x and arena.ai.reflected_x(value) <= puck_bounds.end.x, "AI reflects predictions inside actual walls")
 
+func _test_bloom(reduced: bool) -> void:
+	var environment: Environment = main.get_node("WorldEnvironment").environment
+	check(environment.background_mode == Environment.BG_CANVAS, "Environment processes the 2D canvas")
+	check(environment.glow_enabled == not reduced, "Reduced effects controls HDR bloom")
+	check(viewport.use_hdr_2d, "Reduced effects preserves HDR rendering")
+	for emitter: CanvasItem in get_tree().get_nodes_in_group("neon_emitters"):
+		if main.is_ancestor_of(emitter):
+			var material := emitter.material as ShaderMaterial
+			check(is_equal_approx(material.get_shader_parameter("emission_strength"), 1.0 if reduced else 2.5), "Gameplay and preview emission follows feedback settings: " + str(emitter.get_path()))
+	check(arena.effects.trail.visible == not reduced, "Reduced effects controls trail visibility")
+	check(arena.effects.sparks.visible == not reduced and arena.effects.burst.visible == not reduced, "Reduced effects controls particles")
+
 func _test_settings() -> void:
 	# Preserve developer preferences while exercising persistence.
 	var save_path := ProjectSettings.globalize_path("user://settings.cfg")
@@ -271,11 +292,24 @@ func _test_settings() -> void:
 	var backup := FileAccess.get_file_as_bytes(save_path) if existed else PackedByteArray()
 	var settings := get_tree().root.get_node("Settings")
 	var old_music: float = settings.music_volume
+	var old_reduced: bool = settings.reduced_effects
 	settings.music_volume = 0.23
+	main._show_settings("menu")
+	main.get_node("Content/SettingsPanel/Reduced").set_pressed_no_signal(false)
+	main.get_node("Content/SettingsPanel/Reduced").button_pressed = true
+	main._close_settings()
+	_test_bloom(true)
 	check(settings.save() == OK, "Settings save succeeds")
 	var config := ConfigFile.new()
 	check(config.load(save_path) == OK and is_equal_approx(config.get_value("audio", "music"), 0.23), "Settings persist to disk")
+	check(config.get_value("feedback", "reduced_effects", false) == true, "Reduced effects persists to disk")
+	settings.reduced_effects = false
+	settings._ready()
+	main._apply_feedback_visibility()
+	_test_bloom(true)
 	settings.music_volume = old_music
+	settings.reduced_effects = old_reduced
+	main._apply_feedback_visibility()
 	if existed:
 		var file := FileAccess.open(save_path, FileAccess.WRITE)
 		file.store_buffer(backup)

@@ -257,12 +257,13 @@ func _back() -> void:
 func _apply_feedback_visibility() -> void:
 	arena.effects.sparks.visible = not Settings.reduced_effects
 	arena.effects.burst.visible = not Settings.reduced_effects
-	for halo_path in [
-		"Gameplay/Arena/BottomPaddle/Halo", "Gameplay/Arena/TopPaddle/Halo",
-		"Gameplay/Arena/Puck/Halo", "Content/Menu/Preview/CyanPaddle/Halo",
-		"Content/Menu/Preview/PinkPaddle/Halo", "Content/Menu/Preview/Puck/Halo",
-	]:
-		get_node(halo_path).visible = not Settings.reduced_effects
+	arena.effects.trail.visible = not Settings.reduced_effects
+	$WorldEnvironment.environment.glow_enabled = not Settings.reduced_effects
+	# Each reusable scene owns its material, so changing feedback stays local.
+	for emitter: CanvasItem in get_tree().get_nodes_in_group("neon_emitters"):
+		if is_ancestor_of(emitter):
+			var material := emitter.material as ShaderMaterial
+			material.set_shader_parameter("emission_strength", 1.0 if Settings.reduced_effects else 2.5)
 
 func _quit_game() -> void:
 	await get_tree().process_frame

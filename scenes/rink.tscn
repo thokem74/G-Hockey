@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/rink.gd" id="1"]
+[ext_resource type="Material" path="res://resources/neon_emission.tres" id="Neon"]
 
 [node name="Rink" type="Node2D"]
 script = ExtResource("1")
@@ -199,67 +200,43 @@ points = PackedVector2Array(12, 1215.6666666666667, 708, 1215.6666666666667)
 width = 1.0
 default_color = Color(0.2, 0.6, 0.8, 0.035)
 
-[node name="TopLeftGlow" type="Line2D" parent="."]
-points = PackedVector2Array(12, 640, 12, 12, 270, 12)
-width = 18.0
-default_color = Color(1, 0.22, 0.55, 0.12)
-antialiased = true
-
-[node name="TopLeftEdge" type="Line2D" parent="."]
+[node name="TopLeftEdge" type="Line2D" parent="." groups=["neon_emitters"]]
+material = ExtResource("Neon")
 points = PackedVector2Array(12, 640, 12, 12, 270, 12)
 width = 4.0
 default_color = Color(1, 0.22, 0.55, 0.9)
 antialiased = true
 
-[node name="TopRightGlow" type="Line2D" parent="."]
-points = PackedVector2Array(450, 12, 708, 12, 708, 640)
-width = 18.0
-default_color = Color(1, 0.22, 0.55, 0.12)
-antialiased = true
-
-[node name="TopRightEdge" type="Line2D" parent="."]
+[node name="TopRightEdge" type="Line2D" parent="." groups=["neon_emitters"]]
+material = ExtResource("Neon")
 points = PackedVector2Array(450, 12, 708, 12, 708, 640)
 width = 4.0
 default_color = Color(1, 0.22, 0.55, 0.9)
 antialiased = true
 
-[node name="BottomLeftGlow" type="Line2D" parent="."]
-points = PackedVector2Array(12, 640, 12, 1268, 270, 1268)
-width = 18.0
-default_color = Color(0.2, 0.9, 1, 0.12)
-antialiased = true
-
-[node name="BottomLeftEdge" type="Line2D" parent="."]
+[node name="BottomLeftEdge" type="Line2D" parent="." groups=["neon_emitters"]]
+material = ExtResource("Neon")
 points = PackedVector2Array(12, 640, 12, 1268, 270, 1268)
 width = 4.0
 default_color = Color(0.2, 0.9, 1, 0.9)
 antialiased = true
 
-[node name="BottomRightGlow" type="Line2D" parent="."]
-points = PackedVector2Array(450, 1268, 708, 1268, 708, 640)
-width = 18.0
-default_color = Color(0.2, 0.9, 1, 0.12)
-antialiased = true
-
-[node name="BottomRightEdge" type="Line2D" parent="."]
+[node name="BottomRightEdge" type="Line2D" parent="." groups=["neon_emitters"]]
+material = ExtResource("Neon")
 points = PackedVector2Array(450, 1268, 708, 1268, 708, 640)
 width = 4.0
 default_color = Color(0.2, 0.9, 1, 0.9)
 antialiased = true
 
-[node name="CenterLineGlow" type="Line2D" parent="."]
-points = PackedVector2Array(12, 640, 708, 640)
-width = 18.0
-default_color = Color(0.3, 0.6, 0.8, 0.12)
-antialiased = true
-
-[node name="CenterLineEdge" type="Line2D" parent="."]
+[node name="CenterLineEdge" type="Line2D" parent="." groups=["neon_emitters"]]
+material = ExtResource("Neon")
 points = PackedVector2Array(12, 640, 708, 640)
 width = 4.0
 default_color = Color(0.3, 0.6, 0.8, 0.9)
 antialiased = true
 
-[node name="CenterCircle" type="Line2D" parent="."]
+[node name="CenterCircle" type="Line2D" parent="." groups=["neon_emitters"]]
+material = ExtResource("Neon")
 position = Vector2(360, 640)
 points = PackedVector2Array(88.000, 0.000, 87.576, 8.626, 86.309, 17.168, 84.211, 25.545, 81.301, 33.676, 77.609, 41.483, 73.169, 48.890, 68.025, 55.827, 62.225, 62.225, 55.827, 68.025, 48.890, 73.169, 41.483, 77.609, 33.676, 81.301, 25.545, 84.211, 17.168, 86.309, 8.626, 87.576, 0.000, 88.000, -8.626, 87.576, -17.168, 86.309, -25.545, 84.211, -33.676, 81.301, -41.483, 77.609, -48.890, 73.169, -55.827, 68.025, -62.225, 62.225, -68.025, 55.827, -73.169, 48.890, -77.609, 41.483, -81.301, 33.676, -84.211, 25.545, -86.309, 17.168, -87.576, 8.626, -88.000, 0.000, -87.576, -8.626, -86.309, -17.168, -84.211, -25.545, -81.301, -33.676, -77.609, -41.483, -73.169, -48.890, -68.025, -55.827, -62.225, -62.225, -55.827, -68.025, -48.890, -73.169, -41.483, -77.609, -33.676, -81.301, -25.545, -84.211, -17.168, -86.309, -8.626, -87.576, -0.000, -88.000, 8.626, -87.576, 17.168, -86.309, 25.545, -84.211, 33.676, -81.301, 41.483, -77.609, 48.890, -73.169, 55.827, -68.025, 62.225, -62.225, 68.025, -55.827, 73.169, -48.890, 77.609, -41.483, 81.301, -33.676, 84.211, -25.545, 86.309, -17.168, 87.576, -8.626, 88, 0)
 width = 2.0
