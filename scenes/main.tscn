@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1"]
 [ext_resource type="Theme" path="res://resources/neon_theme.tres" id="2"]
@@ -8,6 +8,8 @@
 [ext_resource type="PackedScene" path="res://scenes/rink.tscn" id="6"]
 [ext_resource type="PackedScene" path="res://scenes/paddle.tscn" id="7"]
 [ext_resource type="PackedScene" path="res://scenes/puck.tscn" id="8"]
+
+[ext_resource type="Script" path="res://scripts/touch_slider.gd" id="TouchSlider"]
 
 [sub_resource type="Environment" id="NeonEnvironment"]
 resource_local_to_scene = true
@@ -373,6 +375,7 @@ offset_right = 616.0
 offset_bottom = 528.0
 step = 1.0
 value = 55.0
+script = ExtResource("TouchSlider")
 
 [node name="SoundsLabel" type="Label" parent="Content/SettingsPanel"]
 layout_mode = 0
@@ -396,6 +399,7 @@ offset_right = 616.0
 offset_bottom = 668.0
 step = 1.0
 value = 80.0
+script = ExtResource("TouchSlider")
 
 [node name="Vibration" type="CheckButton" parent="Content/SettingsPanel"]
 layout_mode = 0

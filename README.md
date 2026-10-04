@@ -52,6 +52,7 @@ Open the scenes in the editor to inspect or change their default appearance.
 | `scenes/effects.tscn`, `scripts/effects.gd` | Bounded particle effects and puck trail |
 | `scenes/audio.tscn`, `scripts/audio.gd` | Looping music and an eight-voice effects pool |
 | `scripts/settings.gd` | Saved user preferences |
+| `scripts/touch_slider.gd` | Native finger dragging for volume sliders, alongside standard mouse controls |
 | `resources/default_match.tres` | Default match configuration |
 | `resources/neon_theme.tres`, `resources/neon_emission.tres`, `shaders/` | Shared UI styles, selective HDR emission, and background shader |
 
@@ -151,7 +152,13 @@ It captures menus, settings, match screens, countdown, pause, results, and
 phone/tablet layouts to `/tmp/ghockey-*.png`. Tests and audio-generation tools
 are excluded from Android exports.
 
-Current validation for mode selection and Start: **878 gameplay checks passed**.
+Current validation including native volume-slider touch input: **959 gameplay
+checks passed**. Volume tests cover scaled touch coordinates at four display sizes,
+dragging beyond the slider, ignoring other fingers, cancellation, settings closure,
+focus loss, mouse input, audio values, and persistence of both volume settings.
+The slider fix has not yet been verified on a physical Android device.
+
+Mode selection and Start verification is included in the same suite.
 Tests cover mouse and native touch selection, mutually exclusive mode toggles,
 repeated selection, highlighting, option cycling and wraparound, Start with the
 chosen mode/AI/goal target, rematches, and preserving selections through settings.
