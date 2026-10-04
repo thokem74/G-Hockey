@@ -18,7 +18,7 @@ func check(condition: bool, description: String) -> void:
 
 func start_match(players: int = 2) -> void:
 	main.options.player_count = players
-	main.score_target.selected = 0
+	main.options.winning_score_index = 0
 	main._start_match()
 	arena.set_physics_process(false)
 	arena._physics_process(3.01)
@@ -57,8 +57,9 @@ func _run() -> void:
 		if arena.state == HockeyArena.State.PAUSED:
 			pause_transitions += 1
 	)
+	_test_menu_defaults()
 	main.options.player_count = 2
-	main.score_target.selected = 0
+	main.options.winning_score_index = 0
 	main._start_match()
 	arena.set_physics_process(false)
 	check(arena.state == HockeyArena.State.COUNTDOWN, "Match begins with countdown")
@@ -68,6 +69,8 @@ func _run() -> void:
 	for display_size in [Vector2i(720, 1280), Vector2i(720, 1560), Vector2i(720, 1620), Vector2i(960, 1280)]:
 		viewport.size = display_size
 		await get_tree().process_frame
+		start_match()
+		_test_menu_options()
 		start_match()
 		_test_layout(display_size)
 		_test_controls()
@@ -113,14 +116,83 @@ func _run() -> void:
 		check(safe.encloses(button.get_rect()), "Score target fits inside safe area")
 	check(arena.layout.bounds.end.x == 708, "Safe insets do not shrink rink")
 	main._fit_content()
-	main._show_setup(1)
-	check("Tap either score to pause" in main.get_node("Content/Setup/Hint").text, "Setup explains score buttons")
+	main._show_menu()
 	_test_settings()
 	main.queue_free()
 	viewport.queue_free()
 	await get_tree().process_frame
 	print("Gameplay checks: %d passed, %d failed" % [checks - failures, failures])
 	get_tree().quit(1 if failures else 0)
+
+func click_button(button: Button, use_touch: bool) -> void:
+	var position := button.get_global_rect().get_center()
+	if use_touch:
+		var event := InputEventScreenTouch.new()
+		event.index = 9
+		event.position = position
+		event.pressed = true
+		viewport.push_input(event, true)
+		event.pressed = false
+		viewport.push_input(event, true)
+	else:
+		var event := InputEventMouseButton.new()
+		event.button_index = MOUSE_BUTTON_LEFT
+		event.position = position
+		event.pressed = true
+		viewport.push_input(event, true)
+		event.pressed = false
+		viewport.push_input(event, true)
+
+func _test_menu_defaults() -> void:
+	check(main.score_target.text == "GOALS TO WIN\n7", "Menu defaults to seven goals")
+	check(main.difficulty.text == "DIFFICULTY\nNormal", "Menu defaults to Normal difficulty")
+	check(not main.has_node("Content/Setup"), "Mode buttons have no intermediate setup screen")
+
+func _test_menu_options() -> void:
+	main._show_menu()
+	var settings_button := main.get_node("Content/Menu/Settings") as Button
+	var quit_button := main.get_node("Content/Menu/Quit") as Button
+	check(main.score_target.position.x == settings_button.position.x and main.score_target.size.x == settings_button.size.x, "Goals column aligns with Settings")
+	check(main.difficulty.position.x == quit_button.position.x and main.difficulty.size.x == quit_button.size.x, "Difficulty column aligns with Quit")
+	check(main.score_target.position.y == main.difficulty.position.y, "Option buttons share a row")
+	for button: Button in [main.score_target, main.difficulty]:
+		check(button.size.y >= 64, "Option buttons have large touch targets")
+		check(Rect2(Vector2.ZERO, Vector2(viewport.size)).encloses(button.get_global_rect()), "Option buttons fit the display")
+	check(main.score_target.get_rect().end.y < settings_button.position.y, "Options do not overlap Settings")
+	for use_touch in [false, true]:
+		main.options.winning_score_index = 0
+		main.options.difficulty = 0
+		main._update_match_option_labels()
+		for goals in [5, 7, 10, 3]:
+			click_button(main.score_target, use_touch)
+			check(main.options.winning_score() == goals, "Goals cycle once per mouse or touch activation, including wraparound")
+			check(main.score_target.text == "GOALS TO WIN\n%d" % goals, "Goals label follows selection")
+		for difficulty_name in ["Normal", "Hard", "Expert", "Easy"]:
+			click_button(main.difficulty, use_touch)
+			check(main.difficulty.text == "DIFFICULTY\n" + difficulty_name, "Difficulty cycles once per mouse or touch activation, including wraparound")
+		check(main.options.difficulty == 0, "Difficulty wraps back to Easy")
+		main.options.winning_score_index = 3
+		main.options.difficulty = 3
+		main._update_match_option_labels()
+		for players in [1, 2]:
+			main._show_menu()
+			click_button(main.get_node("Content/Menu/OnePlayer" if players == 1 else "Content/Menu/TwoPlayers"), use_touch)
+			arena.set_physics_process(false)
+			check(arena.state == HockeyArena.State.COUNTDOWN and not main.menu.visible, "Mode button starts countdown immediately")
+			check(arena.options.player_count == players and arena.options.winning_score() == 10, "Mode starts with chosen player count and goal target")
+			check(main.options.difficulty == 3 and main.difficulty.visible, "Local mode preserves the selected solo difficulty")
+			if players == 1:
+				check(arena.ai.profile == HockeyArena.AI_PROFILES[3], "Solo match uses selected Expert AI")
+			main._pause()
+			check(main.get_node("Content/Overlay/Card").get_rect().encloses(main.get_node("Content/Overlay/Settings").get_rect()), "Pause settings stays inside its card")
+			main.get_node("Content/Overlay/Restart").pressed.emit()
+			arena.set_physics_process(false)
+			check(arena.state == HockeyArena.State.COUNTDOWN and arena.options.player_count == players and arena.options.winning_score() == 10, "Restart preserves mode and selections")
+			main._show_menu()
+			main._show_settings("menu")
+			# Settings persistence is exercised separately with preferences backed up.
+			main._show_menu()
+			check(main.score_target.text == "GOALS TO WIN\n10" and main.difficulty.text == "DIFFICULTY\nExpert", "Settings and menu visits preserve labels")
 
 func _test_layout(display_size: Vector2i) -> void:
 	var layout := arena.layout
@@ -260,7 +332,7 @@ func _test_score_buttons() -> void:
 
 func _test_ai() -> void:
 	for level in range(4):
-		main.difficulty.selected = level
+		main.options.difficulty = level
 		start_match(1)
 		arena.ai.rng.seed = 42
 		touch(1, arena.top.position, true)
@@ -297,7 +369,10 @@ func _test_settings() -> void:
 	main._show_settings("menu")
 	main.get_node("Content/SettingsPanel/Reduced").set_pressed_no_signal(false)
 	main.get_node("Content/SettingsPanel/Reduced").button_pressed = true
+	var selected_difficulty: int = main.options.difficulty
+	var selected_goals: int = main.options.winning_score_index
 	main._close_settings()
+	check(main.options.difficulty == selected_difficulty and main.options.winning_score_index == selected_goals, "Saving settings preserves match selections")
 	_test_bloom(true)
 	check(settings.save() == OK, "Settings save succeeds")
 	var config := ConfigFile.new()

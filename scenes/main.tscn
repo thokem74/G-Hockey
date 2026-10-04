@@ -201,8 +201,8 @@ vertical_alignment = 1
 theme_override_colors/font_color = Color(0.45, 0.6, 0.69, 1)
 
 [node name="Preview" type="Node2D" parent="Content/Menu"]
-position = Vector2(226.8, 370)
-scale = Vector2(0.37, 0.37)
+position = Vector2(248.4, 364)
+scale = Vector2(0.31, 0.31)
 
 [node name="Rink" parent="Content/Menu/Preview" instance=ExtResource("6")]
 
@@ -220,9 +220,9 @@ modulate = Color(0.86, 1, 0.7, 1)
 [node name="OnePlayer" type="Button" parent="Content/Menu" groups=["menu_buttons"]]
 layout_mode = 0
 offset_left = 96.0
-offset_top = 866.0
+offset_top = 784.0
 offset_right = 624.0
-offset_bottom = 942.0
+offset_bottom = 860.0
 text = "1 PLAYER"
 theme_override_styles/normal = SubResource("Primary")
 theme_override_colors/font_color = Color(0.02, 0.065, 0.10, 1)
@@ -230,25 +230,43 @@ theme_override_colors/font_color = Color(0.02, 0.065, 0.10, 1)
 [node name="TwoPlayers" type="Button" parent="Content/Menu" groups=["menu_buttons"]]
 layout_mode = 0
 offset_left = 96.0
-offset_top = 958.0
+offset_top = 876.0
 offset_right = 624.0
-offset_bottom = 1034.0
+offset_bottom = 952.0
 text = "2 PLAYERS"
+
+[node name="ScoreTarget" type="Button" parent="Content/Menu" groups=["menu_buttons"]]
+layout_mode = 0
+offset_left = 96.0
+offset_top = 968.0
+offset_right = 348.0
+offset_bottom = 1044.0
+text = "GOALS TO WIN\n7"
+theme_override_font_sizes/font_size = 20
+
+[node name="Difficulty" type="Button" parent="Content/Menu" groups=["menu_buttons"]]
+layout_mode = 0
+offset_left = 372.0
+offset_top = 968.0
+offset_right = 624.0
+offset_bottom = 1044.0
+text = "DIFFICULTY\nNormal"
+theme_override_font_sizes/font_size = 20
 
 [node name="Settings" type="Button" parent="Content/Menu" groups=["menu_buttons"]]
 layout_mode = 0
 offset_left = 96.0
-offset_top = 1050.0
+offset_top = 1060.0
 offset_right = 348.0
-offset_bottom = 1118.0
+offset_bottom = 1128.0
 text = "SETTINGS"
 
 [node name="Quit" type="Button" parent="Content/Menu" groups=["menu_buttons"]]
 layout_mode = 0
 offset_left = 372.0
-offset_top = 1050.0
+offset_top = 1060.0
 offset_right = 624.0
-offset_bottom = 1118.0
+offset_bottom = 1128.0
 text = "QUIT"
 
 [node name="Footer" type="Label" parent="Content/Menu"]
@@ -263,156 +281,6 @@ theme_override_font_sizes/font_size = 16
 horizontal_alignment = 1
 vertical_alignment = 1
 theme_override_colors/font_color = Color(0.45, 0.6, 0.69, 1)
-
-[node name="Setup" type="Control" parent="Content"]
-layout_mode = 0
-offset_left = 0.0
-offset_top = 0.0
-offset_right = 720.0
-offset_bottom = 1280.0
-visible = false
-mouse_filter = 2
-
-[node name="Card" type="Panel" parent="Content/Setup"]
-layout_mode = 0
-offset_left = 64.0
-offset_top = 232.0
-offset_right = 656.0
-offset_bottom = 1074.0
-mouse_filter = 2
-
-[node name="Eyebrow" type="Label" parent="Content/Setup"]
-layout_mode = 0
-offset_left = 96.0
-offset_top = 270.0
-offset_right = 624.0
-offset_bottom = 302.0
-mouse_filter = 2
-text = "CHOOSE YOUR CHALLENGE"
-theme_override_font_sizes/font_size = 18
-horizontal_alignment = 1
-vertical_alignment = 1
-theme_override_colors/font_color = Color(0.2, 0.9, 1, 1)
-theme_override_fonts/font = ExtResource("5")
-
-[node name="Title" type="Label" parent="Content/Setup"]
-layout_mode = 0
-offset_left = 96.0
-offset_top = 316.0
-offset_right = 624.0
-offset_bottom = 376.0
-mouse_filter = 2
-text = "SOLO MATCH"
-theme_override_font_sizes/font_size = 42
-horizontal_alignment = 1
-vertical_alignment = 1
-theme_override_fonts/font = ExtResource("5")
-
-[node name="Description" type="Label" parent="Content/Setup"]
-layout_mode = 0
-offset_left = 96.0
-offset_top = 386.0
-offset_right = 624.0
-offset_bottom = 421.0
-mouse_filter = 2
-text = "You vs. the machine"
-theme_override_font_sizes/font_size = 24
-horizontal_alignment = 1
-vertical_alignment = 1
-theme_override_colors/font_color = Color(0.45, 0.6, 0.69, 1)
-
-[node name="DifficultyLabel" type="Label" parent="Content/Setup"]
-layout_mode = 0
-offset_left = 104.0
-offset_top = 464.0
-offset_right = 616.0
-offset_bottom = 496.0
-mouse_filter = 2
-text = "DIFFICULTY"
-theme_override_font_sizes/font_size = 18
-horizontal_alignment = 0
-vertical_alignment = 1
-theme_override_colors/font_color = Color(0.45, 0.6, 0.69, 1)
-theme_override_fonts/font = ExtResource("5")
-
-[node name="Difficulty" type="OptionButton" parent="Content/Setup"]
-layout_mode = 0
-offset_left = 96.0
-offset_top = 510.0
-offset_right = 624.0
-offset_bottom = 582.0
-item_count = 4
-selected = 1
-popup/item_0/text = "Easy"
-popup/item_0/id = 0
-popup/item_1/text = "Normal"
-popup/item_1/id = 1
-popup/item_2/text = "Hard"
-popup/item_2/id = 2
-popup/item_3/text = "Expert"
-popup/item_3/id = 3
-
-[node name="ScoreLabel" type="Label" parent="Content/Setup"]
-layout_mode = 0
-offset_left = 104.0
-offset_top = 622.0
-offset_right = 616.0
-offset_bottom = 654.0
-mouse_filter = 2
-text = "GOALS TO WIN"
-theme_override_font_sizes/font_size = 18
-horizontal_alignment = 0
-vertical_alignment = 1
-theme_override_colors/font_color = Color(0.45, 0.6, 0.69, 1)
-theme_override_fonts/font = ExtResource("5")
-
-[node name="ScoreTarget" type="OptionButton" parent="Content/Setup"]
-layout_mode = 0
-offset_left = 96.0
-offset_top = 666.0
-offset_right = 624.0
-offset_bottom = 738.0
-item_count = 4
-selected = 2
-popup/item_0/text = "3 goals"
-popup/item_0/id = 0
-popup/item_1/text = "5 goals"
-popup/item_1/id = 1
-popup/item_2/text = "7 goals"
-popup/item_2/id = 2
-popup/item_3/text = "10 goals"
-popup/item_3/id = 3
-
-[node name="Hint" type="Label" parent="Content/Setup"]
-layout_mode = 0
-offset_left = 96.0
-offset_top = 768.0
-offset_right = 624.0
-offset_bottom = 860.0
-mouse_filter = 2
-text = "Drag on your half to move.\nStrike the puck into the top goal."
-theme_override_font_sizes/font_size = 23
-horizontal_alignment = 1
-vertical_alignment = 1
-theme_override_colors/font_color = Color(0.45, 0.6, 0.69, 1)
-
-[node name="Start" type="Button" parent="Content/Setup" groups=["menu_buttons"]]
-layout_mode = 0
-offset_left = 96.0
-offset_top = 882.0
-offset_right = 624.0
-offset_bottom = 958.0
-text = "ENTER THE RINK"
-theme_override_styles/normal = SubResource("Primary")
-theme_override_colors/font_color = Color(0.02, 0.065, 0.10, 1)
-
-[node name="Back" type="Button" parent="Content/Setup" groups=["menu_buttons"]]
-layout_mode = 0
-offset_left = 96.0
-offset_top = 978.0
-offset_right = 624.0
-offset_bottom = 1042.0
-text = "BACK"
 
 [node name="SettingsPanel" type="Control" parent="Content"]
 layout_mode = 0

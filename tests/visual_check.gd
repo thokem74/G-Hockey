@@ -43,11 +43,9 @@ func _run() -> void:
 func _capture_layout(main: Control, suffix: String) -> void:
 	main._show_menu()
 	await capture(main, "menu" + suffix)
-	main._show_setup(1)
-	await capture(main, "setup" + suffix)
 	main._show_settings("menu")
 	await capture(main, "settings" + suffix)
-	main._start_match()
+	main.get_node("Content/Menu/OnePlayer").pressed.emit()
 	await capture(main, "countdown" + suffix)
 	var arena := main.get_node("Gameplay/Arena") as HockeyArena
 	arena.set_physics_process(false)
@@ -66,9 +64,8 @@ func _capture_layout(main: Control, suffix: String) -> void:
 	for goal in range(main.options.winning_score()):
 		arena._on_goal(0)
 	await capture(main, "result" + suffix)
-	main._show_setup(2)
-	await capture(main, "duel-setup" + suffix)
-	main._start_match()
+	main._show_menu()
+	main.get_node("Content/Menu/TwoPlayers").pressed.emit()
 	arena.set_physics_process(false)
 	arena._physics_process(3.01)
 	await capture(main, "duel" + suffix)

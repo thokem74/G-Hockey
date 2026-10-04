@@ -1,6 +1,7 @@
 extends Control
 
 const LOGICAL_SIZE := Vector2(720, 1280)
+const DIFFICULTY_NAMES: Array[String] = ["Easy", "Normal", "Hard", "Expert"]
 const DEFAULT_OPTIONS: MatchOptions = preload("res://resources/default_match.tres")
 
 var options: MatchOptions = DEFAULT_OPTIONS.duplicate() as MatchOptions
@@ -11,13 +12,12 @@ var settings_return: String = "menu"
 @onready var arena: HockeyArena = $Gameplay/Arena
 @onready var modal_dim: ColorRect = $ModalDim
 @onready var menu: Control = $Content/Menu
-@onready var setup: Control = $Content/Setup
 @onready var settings_panel: Control = $Content/SettingsPanel
 @onready var hud: Control = $Gameplay/HUD
 @onready var overlay: Control = $Content/Overlay
 @onready var countdown: Label = $Gameplay/Countdown
-@onready var difficulty: OptionButton = $Content/Setup/Difficulty
-@onready var score_target: OptionButton = $Content/Setup/ScoreTarget
+@onready var difficulty: Button = $Content/Menu/Difficulty
+@onready var score_target: Button = $Content/Menu/ScoreTarget
 
 func _ready() -> void:
 	get_tree().auto_accept_quit = false
@@ -27,8 +27,7 @@ func _ready() -> void:
 	arena.score_changed.connect(_update_score)
 	arena.countdown_changed.connect(func(text: String) -> void: countdown.text = text)
 	arena.match_finished.connect(_show_result)
-	difficulty.selected = options.difficulty
-	score_target.selected = options.winning_score_index
+	_update_match_option_labels()
 	$Content/SettingsPanel/Music.value = Settings.music_volume * 100.0
 	$Content/SettingsPanel/Sounds.value = Settings.effects_volume * 100.0
 	$Content/SettingsPanel/Vibration.button_pressed = Settings.vibration
@@ -74,12 +73,14 @@ func _unhandled_input(event: InputEvent) -> void:
 		arena.handle_input(event)
 
 func _connect_buttons() -> void:
-	$Content/Menu/OnePlayer.pressed.connect(func() -> void: _show_setup(1))
-	$Content/Menu/TwoPlayers.pressed.connect(func() -> void: _show_setup(2))
+	$Content/Menu/OnePlayer.pressed.connect(func() -> void: _start_mode(1))
+	$Content/Menu/TwoPlayers.pressed.connect(func() -> void: _start_mode(2))
 	$Content/Menu/Settings.pressed.connect(func() -> void: _show_settings("menu"))
 	$Content/Menu/Quit.pressed.connect(_quit_game)
-	$Content/Setup/Start.pressed.connect(_start_match)
-	$Content/Setup/Back.pressed.connect(_show_menu)
+	score_target.pressed.connect(_cycle_score_target)
+	difficulty.pressed.connect(_cycle_difficulty)
+	for button: Button in [$Content/Menu/OnePlayer, $Content/Menu/TwoPlayers, score_target, difficulty]:
+		button.gui_input.connect(_on_match_button_input.bind(button))
 	$Content/SettingsPanel/Back.pressed.connect(_close_settings)
 	for score_button: Button in [$Gameplay/HUD/TopScore, $Gameplay/HUD/BottomScore]:
 		score_button.pressed.connect(_pause)
@@ -139,7 +140,6 @@ func _on_score_input(event: InputEvent, button: Button) -> void:
 
 func _hide_panels() -> void:
 	menu.hide()
-	setup.hide()
 	settings_panel.hide()
 	overlay.hide()
 	modal_dim.hide()
@@ -152,21 +152,30 @@ func _show_menu() -> void:
 	menu.show()
 	countdown.text = ""
 
-func _show_setup(players: int) -> void:
-	_hide_panels()
-	gameplay.hide()
-	arena.return_to_menu()
+func _start_mode(players: int) -> void:
 	options.player_count = players
-	$Content/Setup/Title.text = "SOLO MATCH" if players == 1 else "LOCAL DUEL"
-	$Content/Setup/Description.text = "You vs. the machine" if players == 1 else "Two players. One screen."
-	difficulty.visible = players == 1
-	$Content/Setup/DifficultyLabel.visible = players == 1
-	$Content/Setup/Hint.text = "Drag on your half to move.\nStrike the puck into the top goal.\nTap either score to pause." if players == 1 else "Sit at opposite ends of the device.\nEach player drags on their own half.\nTap either score to pause."
-	setup.show()
+	_start_match()
+
+func _cycle_score_target() -> void:
+	options.winning_score_index = (options.winning_score_index + 1) % 4
+	_update_match_option_labels()
+
+func _cycle_difficulty() -> void:
+	options.difficulty = (options.difficulty + 1) % DIFFICULTY_NAMES.size()
+	_update_match_option_labels()
+
+func _update_match_option_labels() -> void:
+	score_target.text = "GOALS TO WIN\n%d" % options.winning_score()
+	difficulty.text = "DIFFICULTY\n%s" % DIFFICULTY_NAMES[options.difficulty]
+
+func _on_match_button_input(event: InputEvent, button: Button) -> void:
+	# Mouse emulation is disabled so gameplay can own independent fingers.
+	if event is InputEventScreenTouch:
+		button.accept_event()
+		if event.pressed and not event.canceled:
+			button.pressed.emit()
 
 func _start_match() -> void:
-	options.difficulty = difficulty.selected
-	options.winning_score_index = score_target.selected
 	_hide_panels()
 	gameplay.show()
 	hud.show()
@@ -245,8 +254,6 @@ func _set_sounds(value: float) -> void:
 func _back() -> void:
 	if settings_panel.visible:
 		_close_settings()
-	elif setup.visible:
-		_show_menu()
 	elif arena.state == HockeyArena.State.PAUSED:
 		_resume()
 	elif arena.state == HockeyArena.State.FINISHED:
