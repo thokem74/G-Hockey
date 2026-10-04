@@ -146,16 +146,25 @@ func click_button(button: Button, use_touch: bool) -> void:
 func _test_menu_defaults() -> void:
 	check(main.score_target.text == "GOALS TO WIN\n7", "Menu defaults to seven goals")
 	check(main.difficulty.text == "DIFFICULTY\nNormal", "Menu defaults to Normal difficulty")
+	check(main.options.player_count == 1 and main.get_node("Content/Menu/OnePlayer").button_pressed and not main.get_node("Content/Menu/TwoPlayers").button_pressed, "Default mode is solo and visibly selected")
 	check(not main.has_node("Content/Setup"), "Mode buttons have no intermediate setup screen")
 
 func _test_menu_options() -> void:
 	main._show_menu()
 	var settings_button := main.get_node("Content/Menu/Settings") as Button
 	var quit_button := main.get_node("Content/Menu/Quit") as Button
-	check(main.score_target.position.x == settings_button.position.x and main.score_target.size.x == settings_button.size.x, "Goals column aligns with Settings")
+	var start_button := main.get_node("Content/Menu/Start") as Button
+	var one_player := main.get_node("Content/Menu/OnePlayer") as Button
+	var two_players := main.get_node("Content/Menu/TwoPlayers") as Button
+	check(main.score_target.position.x == start_button.position.x and main.score_target.size.x == start_button.size.x, "Goals column aligns with Start")
 	check(main.difficulty.position.x == quit_button.position.x and main.difficulty.size.x == quit_button.size.x, "Difficulty column aligns with Quit")
+	check(one_player.get_rect().position.x == start_button.position.x and one_player.size.x == start_button.size.x, "Solo column aligns with Start")
+	check(two_players.position.x == quit_button.position.x and two_players.size.x == quit_button.size.x, "Local column aligns with Quit")
+	check(one_player.position.y == two_players.position.y, "Player buttons share a row")
+	check(settings_button.position.x == start_button.position.x and settings_button.get_rect().end.x == quit_button.get_rect().end.x, "Settings spans both columns")
+	check(settings_button.get_rect().end.y < start_button.position.y, "Settings does not overlap Start")
 	check(main.score_target.position.y == main.difficulty.position.y, "Option buttons share a row")
-	for button: Button in [main.score_target, main.difficulty]:
+	for button: Button in [one_player, two_players, main.score_target, main.difficulty, settings_button, start_button, quit_button]:
 		check(button.size.y >= 64, "Option buttons have large touch targets")
 		check(Rect2(Vector2.ZERO, Vector2(viewport.size)).encloses(button.get_global_rect()), "Option buttons fit the display")
 	check(main.score_target.get_rect().end.y < settings_button.position.y, "Options do not overlap Settings")
@@ -177,8 +186,15 @@ func _test_menu_options() -> void:
 		for players in [1, 2]:
 			main._show_menu()
 			click_button(main.get_node("Content/Menu/OnePlayer" if players == 1 else "Content/Menu/TwoPlayers"), use_touch)
+			check(main.menu.visible and arena.state == HockeyArena.State.MENU, "Selecting a mode leaves menu open")
+			check(main.options.player_count == players and one_player.button_pressed == (players == 1) and two_players.button_pressed == (players == 2), "Mode buttons are mutually exclusive for mouse and touch")
+			var selected_button := one_player if players == 1 else two_players
+			check(selected_button.get_theme_stylebox("pressed").bg_color == start_button.get_theme_stylebox("normal").bg_color, "Selected mode uses primary cyan highlight")
+			click_button(selected_button, use_touch)
+			check(selected_button.button_pressed and main.menu.visible and arena.state == HockeyArena.State.MENU, "Selecting current mode retains selection without starting")
+			click_button(start_button, use_touch)
 			arena.set_physics_process(false)
-			check(arena.state == HockeyArena.State.COUNTDOWN and not main.menu.visible, "Mode button starts countdown immediately")
+			check(arena.state == HockeyArena.State.COUNTDOWN and not main.menu.visible, "Start begins selected match countdown")
 			check(arena.options.player_count == players and arena.options.winning_score() == 10, "Mode starts with chosen player count and goal target")
 			check(main.options.difficulty == 3 and main.difficulty.visible, "Local mode preserves the selected solo difficulty")
 			if players == 1:
@@ -192,6 +208,7 @@ func _test_menu_options() -> void:
 			main._show_settings("menu")
 			# Settings persistence is exercised separately with preferences backed up.
 			main._show_menu()
+			check(selected_button.button_pressed and main.options.player_count == players, "Mode selection survives restart, settings, and menu visits")
 			check(main.score_target.text == "GOALS TO WIN\n10" and main.difficulty.text == "DIFFICULTY\nExpert", "Settings and menu visits preserve labels")
 
 func _test_layout(display_size: Vector2i) -> void:

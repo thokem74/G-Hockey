@@ -73,13 +73,14 @@ func _unhandled_input(event: InputEvent) -> void:
 		arena.handle_input(event)
 
 func _connect_buttons() -> void:
-	$Content/Menu/OnePlayer.pressed.connect(func() -> void: _start_mode(1))
-	$Content/Menu/TwoPlayers.pressed.connect(func() -> void: _start_mode(2))
+	$Content/Menu/OnePlayer.pressed.connect(func() -> void: _select_mode(1))
+	$Content/Menu/TwoPlayers.pressed.connect(func() -> void: _select_mode(2))
 	$Content/Menu/Settings.pressed.connect(func() -> void: _show_settings("menu"))
 	$Content/Menu/Quit.pressed.connect(_quit_game)
+	$Content/Menu/Start.pressed.connect(_start_match)
 	score_target.pressed.connect(_cycle_score_target)
 	difficulty.pressed.connect(_cycle_difficulty)
-	for button: Button in [$Content/Menu/OnePlayer, $Content/Menu/TwoPlayers, score_target, difficulty]:
+	for button: Button in [$Content/Menu/OnePlayer, $Content/Menu/TwoPlayers, $Content/Menu/Start, score_target, difficulty]:
 		button.gui_input.connect(_on_match_button_input.bind(button))
 	$Content/SettingsPanel/Back.pressed.connect(_close_settings)
 	for score_button: Button in [$Gameplay/HUD/TopScore, $Gameplay/HUD/BottomScore]:
@@ -149,12 +150,15 @@ func _show_menu() -> void:
 	arena.return_to_menu()
 	gameplay.hide()
 	hud.hide()
+	_select_mode(options.player_count)
 	menu.show()
 	countdown.text = ""
 
-func _start_mode(players: int) -> void:
+func _select_mode(players: int) -> void:
 	options.player_count = players
-	_start_match()
+	# Native touch dispatch emits pressed directly, so synchronize toggle states.
+	$Content/Menu/OnePlayer.set_pressed_no_signal(players == 1)
+	$Content/Menu/TwoPlayers.set_pressed_no_signal(players == 2)
 
 func _cycle_score_target() -> void:
 	options.winning_score_index = (options.winning_score_index + 1) % 4

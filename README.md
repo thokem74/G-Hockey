@@ -10,11 +10,12 @@ or **F5** to run the project.
 - **1 Player:** play against Easy, Normal, Hard, or Expert AI.
 - **2 Players:** sit at opposite ends of one phone or tablet. Cyan is Player 1
   at the bottom; magenta is Player 2 at the top.
-- Below **2 Players**, click **Goals to win** to cycle through 3, 5, 7, and 10;
+- Below the player selectors, click **Goals to win** to cycle through 3, 5, 7, and 10;
   click **Difficulty** to cycle through Easy, Normal, Hard, and Expert.
   Defaults are 7 goals and Normal. Difficulty applies only to solo matches.
-- Click **1 Player** or **2 Players** to start the countdown immediately.
-  Selections remain for the current app session, including rematches and trips
+- Select **1 Player** or **2 Players**, then click **Start** to begin the countdown.
+  The selected mode is highlighted in cyan; 1 Player is the default.
+  Mode and option selections remain for the current app session, including rematches and trips
   to settings or the main menu.
 - Touch anywhere inside your half, then drag to move your paddle. The initial
   offset is preserved so the paddle does not jump underneath your finger.
@@ -150,14 +151,14 @@ It captures menus, settings, match screens, countdown, pause, results, and
 phone/tablet layouts to `/tmp/ghockey-*.png`. Tests and audio-generation tools
 are excluded from Android exports.
 
-Current validation for the main-menu selections update: **737 gameplay checks
-passed**. Tests cover mouse and native touch cycling, wraparound, default labels,
-alignment at four display sizes, direct solo/local countdowns, selected AI,
-rematches, and preserving selections through settings. The rendered verification
-sequence produced 30 captures at phone, tall-phone, and tablet sizes, including
-Reduced effects. The Solo Match and Local Duel setup screens have been removed.
-Android export/device verification was not performed for this menu update because
-the export command was declined.
+Current validation for mode selection and Start: **878 gameplay checks passed**.
+Tests cover mouse and native touch selection, mutually exclusive mode toggles,
+repeated selection, highlighting, option cycling and wraparound, Start with the
+chosen mode/AI/goal target, rematches, and preserving selections through settings.
+Alignment and touch targets are checked at four display sizes. The rendered
+verification sequence produced 33 captures at phone, tall-phone, and tablet sizes,
+including both mode selections and Reduced effects. Android export/device testing
+is deferred to a separate requested step.
 
 Previous validation for the Mobile/HDR migration: **494 gameplay checks passed**,
 including bloom and emission state at startup, both gameplay and menu preview,

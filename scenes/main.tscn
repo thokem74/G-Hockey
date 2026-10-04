@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1"]
 [ext_resource type="Theme" path="res://resources/neon_theme.tres" id="2"]
@@ -19,6 +19,10 @@ glow_levels/5 = 0.0
 glow_intensity = 0.6
 glow_bloom = 0.0
 glow_hdr_threshold = 1.0
+
+[sub_resource type="ButtonGroup" id="PlayerModes"]
+resource_local_to_scene = true
+allow_unpress = false
 
 [sub_resource type="ShaderMaterial" id="BackgroundMaterial"]
 shader = ExtResource("4")
@@ -221,45 +225,66 @@ modulate = Color(0.86, 1, 0.7, 1)
 layout_mode = 0
 offset_left = 96.0
 offset_top = 784.0
-offset_right = 624.0
+offset_right = 348.0
 offset_bottom = 860.0
 text = "1 PLAYER"
-theme_override_styles/normal = SubResource("Primary")
-theme_override_colors/font_color = Color(0.02, 0.065, 0.10, 1)
+toggle_mode = true
+button_group = SubResource("PlayerModes")
+button_pressed = true
+theme_override_styles/pressed = SubResource("Primary")
+theme_override_styles/hover_pressed = SubResource("Primary")
+theme_override_colors/font_pressed_color = Color(0.02, 0.065, 0.10, 1)
+theme_override_colors/font_hover_pressed_color = Color(0.02, 0.065, 0.10, 1)
 
 [node name="TwoPlayers" type="Button" parent="Content/Menu" groups=["menu_buttons"]]
 layout_mode = 0
-offset_left = 96.0
-offset_top = 876.0
+offset_left = 372.0
+offset_top = 784.0
 offset_right = 624.0
-offset_bottom = 952.0
+offset_bottom = 860.0
 text = "2 PLAYERS"
+toggle_mode = true
+button_group = SubResource("PlayerModes")
+theme_override_styles/pressed = SubResource("Primary")
+theme_override_styles/hover_pressed = SubResource("Primary")
+theme_override_colors/font_pressed_color = Color(0.02, 0.065, 0.10, 1)
+theme_override_colors/font_hover_pressed_color = Color(0.02, 0.065, 0.10, 1)
 
 [node name="ScoreTarget" type="Button" parent="Content/Menu" groups=["menu_buttons"]]
 layout_mode = 0
 offset_left = 96.0
-offset_top = 968.0
+offset_top = 876.0
 offset_right = 348.0
-offset_bottom = 1044.0
+offset_bottom = 952.0
 text = "GOALS TO WIN\n7"
 theme_override_font_sizes/font_size = 20
 
 [node name="Difficulty" type="Button" parent="Content/Menu" groups=["menu_buttons"]]
 layout_mode = 0
 offset_left = 372.0
-offset_top = 968.0
+offset_top = 876.0
 offset_right = 624.0
-offset_bottom = 1044.0
+offset_bottom = 952.0
 text = "DIFFICULTY\nNormal"
 theme_override_font_sizes/font_size = 20
 
 [node name="Settings" type="Button" parent="Content/Menu" groups=["menu_buttons"]]
 layout_mode = 0
 offset_left = 96.0
+offset_top = 968.0
+offset_right = 624.0
+offset_bottom = 1044.0
+text = "SETTINGS"
+
+[node name="Start" type="Button" parent="Content/Menu" groups=["menu_buttons"]]
+layout_mode = 0
+offset_left = 96.0
 offset_top = 1060.0
 offset_right = 348.0
 offset_bottom = 1128.0
-text = "SETTINGS"
+text = "START"
+theme_override_styles/normal = SubResource("Primary")
+theme_override_colors/font_color = Color(0.02, 0.065, 0.10, 1)
 
 [node name="Quit" type="Button" parent="Content/Menu" groups=["menu_buttons"]]
 layout_mode = 0

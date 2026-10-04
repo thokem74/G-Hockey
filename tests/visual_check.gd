@@ -45,7 +45,9 @@ func _capture_layout(main: Control, suffix: String) -> void:
 	await capture(main, "menu" + suffix)
 	main._show_settings("menu")
 	await capture(main, "settings" + suffix)
+	main._show_menu()
 	main.get_node("Content/Menu/OnePlayer").pressed.emit()
+	main.get_node("Content/Menu/Start").pressed.emit()
 	await capture(main, "countdown" + suffix)
 	var arena := main.get_node("Gameplay/Arena") as HockeyArena
 	arena.set_physics_process(false)
@@ -66,6 +68,8 @@ func _capture_layout(main: Control, suffix: String) -> void:
 	await capture(main, "result" + suffix)
 	main._show_menu()
 	main.get_node("Content/Menu/TwoPlayers").pressed.emit()
+	await capture(main, "menu-local" + suffix)
+	main.get_node("Content/Menu/Start").pressed.emit()
 	arena.set_physics_process(false)
 	arena._physics_process(3.01)
 	await capture(main, "duel" + suffix)
