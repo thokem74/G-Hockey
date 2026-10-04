@@ -9,19 +9,9 @@ const SOUNDS := {
 	"click": preload("res://assets/audio/click.wav"),
 }
 
-@onready var music: AudioStreamPlayer = $Music
 @onready var voices: Array[Node] = $Voices.get_children()
 
 var next_voice: int = 0
-
-func _ready() -> void:
-	apply_settings()
-	if DisplayServer.get_name() != "headless":
-		music.play()
-
-func apply_settings() -> void:
-	music.volume_db = linear_to_db(maxf(Settings.music_volume * 0.45, 0.0001))
-	music.stream_paused = Settings.music_volume <= 0.0
 
 func play_sound(sound_name: String, strength: float = 1.0) -> void:
 	if Settings.effects_volume <= 0.0 or DisplayServer.get_name() == "headless":
@@ -33,7 +23,6 @@ func play_sound(sound_name: String, strength: float = 1.0) -> void:
 	voice.play()
 
 func stop_all() -> void:
-	music.stop()
 	for voice in voices:
 		voice.stop()
 

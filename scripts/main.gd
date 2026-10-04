@@ -28,12 +28,10 @@ func _ready() -> void:
 	arena.countdown_changed.connect(func(text: String) -> void: countdown.text = text)
 	arena.match_finished.connect(_show_result)
 	_update_match_option_labels()
-	$Content/SettingsPanel/Music.value = Settings.music_volume * 100.0
 	$Content/SettingsPanel/Sounds.value = Settings.effects_volume * 100.0
 	$Content/SettingsPanel/Vibration.button_pressed = Settings.vibration
 	$Content/SettingsPanel/Shake.button_pressed = Settings.screen_shake
 	$Content/SettingsPanel/Reduced.button_pressed = Settings.reduced_effects
-	$Content/SettingsPanel/Music.value_changed.connect(_set_music)
 	$Content/SettingsPanel/Sounds.value_changed.connect(_set_sounds)
 	$Content/SettingsPanel/Vibration.toggled.connect(func(value: bool) -> void: Settings.vibration = value)
 	$Content/SettingsPanel/Shake.toggled.connect(func(value: bool) -> void: Settings.screen_shake = value)
@@ -46,9 +44,7 @@ func _notification(what: int) -> void:
 		return
 	if what == NOTIFICATION_APPLICATION_FOCUS_OUT or what == NOTIFICATION_APPLICATION_PAUSED:
 		_pause()
-		Audio.music.stream_paused = true
-	elif what == NOTIFICATION_APPLICATION_FOCUS_IN or what == NOTIFICATION_APPLICATION_RESUMED:
-		Audio.apply_settings()
+		Audio.stop_all()
 	elif what == NOTIFICATION_WM_CLOSE_REQUEST:
 		_quit_game()
 	elif what == NOTIFICATION_WM_GO_BACK_REQUEST:
@@ -247,10 +243,6 @@ func _close_settings() -> void:
 		_show_pause_panel()
 	else:
 		_show_menu()
-
-func _set_music(value: float) -> void:
-	Settings.music_volume = value / 100.0
-	Audio.apply_settings()
 
 func _set_sounds(value: float) -> void:
 	Settings.effects_volume = value / 100.0

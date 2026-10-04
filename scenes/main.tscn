@@ -321,17 +321,17 @@ mouse_filter = 2
 [node name="Card" type="Panel" parent="Content/SettingsPanel"]
 layout_mode = 0
 offset_left = 64.0
-offset_top = 228.0
+offset_top = 299.0
 offset_right = 656.0
-offset_bottom = 1118.0
+offset_bottom = 1047.0
 mouse_filter = 2
 
 [node name="Eyebrow" type="Label" parent="Content/SettingsPanel"]
 layout_mode = 0
 offset_left = 96.0
-offset_top = 272.0
+offset_top = 343.0
 offset_right = 624.0
-offset_bottom = 304.0
+offset_bottom = 375.0
 mouse_filter = 2
 text = "MAKE IT YOURS"
 theme_override_font_sizes/font_size = 18
@@ -343,9 +343,9 @@ theme_override_fonts/font = ExtResource("5")
 [node name="Title" type="Label" parent="Content/SettingsPanel"]
 layout_mode = 0
 offset_left = 96.0
-offset_top = 318.0
+offset_top = 389.0
 offset_right = 624.0
-offset_bottom = 376.0
+offset_bottom = 447.0
 mouse_filter = 2
 text = "SETTINGS"
 theme_override_font_sizes/font_size = 42
@@ -353,36 +353,12 @@ horizontal_alignment = 1
 vertical_alignment = 1
 theme_override_fonts/font = ExtResource("5")
 
-[node name="MusicLabel" type="Label" parent="Content/SettingsPanel"]
-layout_mode = 0
-offset_left = 104.0
-offset_top = 426.0
-offset_right = 616.0
-offset_bottom = 461.0
-mouse_filter = 2
-text = "MUSIC VOLUME"
-theme_override_font_sizes/font_size = 18
-horizontal_alignment = 0
-vertical_alignment = 1
-theme_override_colors/font_color = Color(0.45, 0.6, 0.69, 1)
-theme_override_fonts/font = ExtResource("5")
-
-[node name="Music" type="HSlider" parent="Content/SettingsPanel"]
-layout_mode = 0
-offset_left = 104.0
-offset_top = 480.0
-offset_right = 616.0
-offset_bottom = 528.0
-step = 1.0
-value = 55.0
-script = ExtResource("TouchSlider")
-
 [node name="SoundsLabel" type="Label" parent="Content/SettingsPanel"]
 layout_mode = 0
 offset_left = 104.0
-offset_top = 568.0
+offset_top = 497.0
 offset_right = 616.0
-offset_bottom = 603.0
+offset_bottom = 532.0
 mouse_filter = 2
 text = "SOUND EFFECTS"
 theme_override_font_sizes/font_size = 18
@@ -394,9 +370,9 @@ theme_override_fonts/font = ExtResource("5")
 [node name="Sounds" type="HSlider" parent="Content/SettingsPanel"]
 layout_mode = 0
 offset_left = 104.0
-offset_top = 620.0
+offset_top = 549.0
 offset_right = 616.0
-offset_bottom = 668.0
+offset_bottom = 597.0
 step = 1.0
 value = 80.0
 script = ExtResource("TouchSlider")
@@ -404,36 +380,36 @@ script = ExtResource("TouchSlider")
 [node name="Vibration" type="CheckButton" parent="Content/SettingsPanel"]
 layout_mode = 0
 offset_left = 96.0
-offset_top = 726.0
+offset_top = 655.0
 offset_right = 624.0
-offset_bottom = 790.0
+offset_bottom = 719.0
 text = "Goal vibration"
 button_pressed = true
 
 [node name="Shake" type="CheckButton" parent="Content/SettingsPanel"]
 layout_mode = 0
 offset_left = 96.0
-offset_top = 804.0
+offset_top = 733.0
 offset_right = 624.0
-offset_bottom = 868.0
+offset_bottom = 797.0
 text = "Screen shake"
 button_pressed = true
 
 [node name="Reduced" type="CheckButton" parent="Content/SettingsPanel"]
 layout_mode = 0
 offset_left = 96.0
-offset_top = 882.0
+offset_top = 811.0
 offset_right = 624.0
-offset_bottom = 946.0
+offset_bottom = 875.0
 text = "Reduced effects"
 button_pressed = false
 
 [node name="Status" type="Label" parent="Content/SettingsPanel"]
 layout_mode = 0
 offset_left = 96.0
-offset_top = 958.0
+offset_top = 887.0
 offset_right = 624.0
-offset_bottom = 998.0
+offset_bottom = 927.0
 mouse_filter = 2
 text = "Saved on this device."
 theme_override_font_sizes/font_size = 18
@@ -444,9 +420,9 @@ theme_override_colors/font_color = Color(0.45, 0.6, 0.69, 1)
 [node name="Back" type="Button" parent="Content/SettingsPanel" groups=["menu_buttons"]]
 layout_mode = 0
 offset_left = 96.0
-offset_top = 1018.0
+offset_top = 947.0
 offset_right = 624.0
-offset_bottom = 1086.0
+offset_bottom = 1015.0
 text = "SAVE & BACK"
 theme_override_styles/normal = SubResource("Primary")
 theme_override_colors/font_color = Color(0.02, 0.065, 0.10, 1)

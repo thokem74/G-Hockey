@@ -227,47 +227,39 @@ func slider_drag(slider: HSlider, index: int, local_x: float) -> void:
 	viewport.push_input(event, true)
 
 func _test_touch_sliders() -> void:
-	var old_music := Settings.music_volume
 	var old_sounds := Settings.effects_volume
 	main._show_settings("menu")
-	for path in ["Music", "Sounds"]:
-		var slider := main.get_node("Content/SettingsPanel/" + path) as HSlider
-		slider.value = 20
-		slider_touch(slider, 20, slider.size * 0.5, true)
-		check(slider.value == 50, "Native touch updates volume at scaled midpoint")
-		slider_drag(slider, 21, slider.size.x)
-		check(slider.value == 50, "Unowned finger cannot move volume slider")
-		slider_drag(slider, 20, slider.size.x + 100)
-		check(slider.value == 100, "Native drag beyond slider clamps to maximum")
-		slider_drag(slider, 20, -100)
-		check(slider.value == 0, "Native drag beyond slider clamps to minimum")
-		if path == "Music":
-			check(Settings.music_volume == 0 and is_equal_approx(Audio.music.volume_db, linear_to_db(0.0001)), "Touch music volume mutes playback")
-		else:
-			check(Settings.effects_volume == 0, "Touch effects volume updates sound setting")
-		slider_touch(slider, 20, Vector2.ZERO, false, true)
-		slider_drag(slider, 20, slider.size.x)
-		check(slider.value == 0, "Canceled finger releases slider")
-		slider_touch(slider, 20, slider.size * 0.5, true)
-		main._show_menu()
-		main._show_settings("menu")
-		slider_drag(slider, 20, slider.size.x)
-		check(slider.value == 50, "Closing settings releases slider ownership")
-		slider_touch(slider, 20, slider.size * 0.5, true)
-		slider_touch(slider, 20, slider.size * 0.5, false)
-		check(slider.finger_index == -1, "Normal finger release clears slider")
-		slider_touch(slider, 20, slider.size * 0.5, true)
-		slider._notification(NOTIFICATION_APPLICATION_FOCUS_OUT)
-		slider_drag(slider, 20, slider.size.x)
-		check(slider.value == 50, "Losing focus releases slider ownership")
-		slider.value = 0
-		click_button(slider, false)
-		check(slider.value == 50, "Mouse slider interaction remains functional")
-	Settings.music_volume = old_music
+	var slider := main.get_node("Content/SettingsPanel/Sounds") as HSlider
+	slider.value = 20
+	slider_touch(slider, 20, slider.size * 0.5, true)
+	check(slider.value == 50, "Native touch updates volume at scaled midpoint")
+	slider_drag(slider, 21, slider.size.x)
+	check(slider.value == 50, "Unowned finger cannot move volume slider")
+	slider_drag(slider, 20, slider.size.x + 100)
+	check(slider.value == 100, "Native drag beyond slider clamps to maximum")
+	slider_drag(slider, 20, -100)
+	check(slider.value == 0, "Native drag beyond slider clamps to minimum")
+	check(Settings.effects_volume == 0, "Touch effects volume updates sound setting")
+	slider_touch(slider, 20, Vector2.ZERO, false, true)
+	slider_drag(slider, 20, slider.size.x)
+	check(slider.value == 0, "Canceled finger releases slider")
+	slider_touch(slider, 20, slider.size * 0.5, true)
+	main._show_menu()
+	main._show_settings("menu")
+	slider_drag(slider, 20, slider.size.x)
+	check(slider.value == 50, "Closing settings releases slider ownership")
+	slider_touch(slider, 20, slider.size * 0.5, true)
+	slider_touch(slider, 20, slider.size * 0.5, false)
+	check(slider.finger_index == -1, "Normal finger release clears slider")
+	slider_touch(slider, 20, slider.size * 0.5, true)
+	slider._notification(NOTIFICATION_APPLICATION_FOCUS_OUT)
+	slider_drag(slider, 20, slider.size.x)
+	check(slider.value == 50, "Losing focus releases slider ownership")
+	slider.value = 0
+	click_button(slider, false)
+	check(slider.value == 50, "Mouse slider interaction remains functional")
 	Settings.effects_volume = old_sounds
-	main.get_node("Content/SettingsPanel/Music").set_value_no_signal(old_music * 100.0)
 	main.get_node("Content/SettingsPanel/Sounds").set_value_no_signal(old_sounds * 100.0)
-	Audio.apply_settings()
 	main._show_menu()
 
 func _test_layout(display_size: Vector2i) -> void:
@@ -439,10 +431,8 @@ func _test_settings() -> void:
 	var existed := FileAccess.file_exists(save_path)
 	var backup := FileAccess.get_file_as_bytes(save_path) if existed else PackedByteArray()
 	var settings := get_tree().root.get_node("Settings")
-	var old_music: float = settings.music_volume
 	var old_effects: float = settings.effects_volume
 	var old_reduced: bool = settings.reduced_effects
-	settings.music_volume = 0.23
 	settings.effects_volume = 0.37
 	main._show_settings("menu")
 	main.get_node("Content/SettingsPanel/Reduced").set_pressed_no_signal(false)
@@ -454,16 +444,14 @@ func _test_settings() -> void:
 	_test_bloom(true)
 	check(settings.save() == OK, "Settings save succeeds")
 	var config := ConfigFile.new()
-	check(config.load(save_path) == OK and is_equal_approx(config.get_value("audio", "music"), 0.23), "Settings persist to disk")
+	check(config.load(save_path) == OK, "Settings persist to disk")
 	check(is_equal_approx(config.get_value("audio", "effects"), 0.37), "Sound effects volume persists to disk")
 	check(config.get_value("feedback", "reduced_effects", false) == true, "Reduced effects persists to disk")
 	settings.reduced_effects = false
 	settings._ready()
 	main._apply_feedback_visibility()
 	_test_bloom(true)
-	settings.music_volume = old_music
 	settings.effects_volume = old_effects
-	Audio.apply_settings()
 	settings.reduced_effects = old_reduced
 	main._apply_feedback_visibility()
 	if existed:

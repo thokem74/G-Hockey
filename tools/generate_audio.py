@@ -1,4 +1,4 @@
-"""Generate G-Hockey's original, deterministic synth soundtrack and effects.
+"""Generate G-Hockey's original, deterministic synth sound effects.
 
 Run from the repository root with Python 3. No external packages are required.
 """
@@ -54,31 +54,4 @@ effect("click", 0.08, 660, 45)
 melody("goal", [440, 554.37, 659.25, 880], 0.11)
 melody("victory", [440, 554.37, 659.25, 880, 659.25, 880, 1108.73], 0.16)
 
-# Eight bars at 112 BPM. Every event has a short release before the loop seam.
-beat_length = 60 / 112
-length = beat_length * 32
-samples = [0.0] * round(length * RATE)
-roots = [110, 130.8128, 97.9989, 146.8324]
-for beat in range(32):
-    start = round(beat * beat_length * RATE)
-    root = roots[beat // 8]
-    for j in range(round(beat_length * RATE)):
-        i = start + j
-        if i >= len(samples):
-            break
-        t = j / RATE
-        # Soft bass and kick leave room for impact sounds.
-        bass = (math.sin(2 * math.pi * root * t) + 0.2 * math.sin(4 * math.pi * root * t)) * math.exp(-9 * t) * 0.13
-        kick = math.sin(2 * math.pi * (48 * t + 10 * (1 - math.exp(-35 * t)))) * math.exp(-24 * t) * 0.2
-        hat = random.uniform(-1, 1) * math.exp(-80 * t) * 0.025
-        samples[i] += (bass + kick + hat) * min(t * 500, 1) * min((beat_length - t) * 100, 1)
-    if beat % 2 == 0:
-        note = root * [4, 6, 5, 8][(beat // 2) % 4]
-        for j in range(round(beat_length * RATE)):
-            i = start + j
-            if i >= len(samples):
-                break
-            t = j / RATE
-            samples[i] += math.sin(2 * math.pi * note * t) * math.exp(-10 * t) * min(t * 120, 1) * 0.075
-write("music", samples)
-print("Generated seven original audio assets.")
+print("Generated six original sound effects.")

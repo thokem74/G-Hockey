@@ -29,9 +29,9 @@ or **F5** to run the project.
   testing of local mode controls one paddle at a time; a device is needed for
   physical simultaneous-touch testing.
 
-Music, effects volume, goal vibration, screen shake, and reduced effects are
+Sound effects volume, goal vibration, screen shake, and reduced effects are
 adjustable. **Save & Back** persists preferences in `user://settings.cfg`.
-The app pauses the match and music when it loses focus. Returning to the app
+The app pauses the match and stops sound effects when it loses focus. Returning to the app
 leaves a match paused until the player explicitly resumes.
 
 ## Scenes and code
@@ -50,9 +50,9 @@ Open the scenes in the editor to inspect or change their default appearance.
 | `scripts/touch_controller.gd` | Independent finger ownership and drag offsets |
 | `scripts/ai_controller.gd`, `resources/ai_*.tres` | AI reaction, movement, aiming, and wall-bounce prediction |
 | `scenes/effects.tscn`, `scripts/effects.gd` | Bounded particle effects and puck trail |
-| `scenes/audio.tscn`, `scripts/audio.gd` | Looping music and an eight-voice effects pool |
+| `scenes/audio.tscn`, `scripts/audio.gd` | An eight-voice sound effects pool |
 | `scripts/settings.gd` | Saved user preferences |
-| `scripts/touch_slider.gd` | Native finger dragging for volume sliders, alongside standard mouse controls |
+| `scripts/touch_slider.gd` | Native finger dragging for the sound effects slider, alongside standard mouse controls |
 | `resources/default_match.tres` | Default match configuration |
 | `resources/neon_theme.tres`, `resources/neon_emission.tres`, `shaders/` | Shared UI styles, selective HDR emission, and background shader |
 
@@ -152,10 +152,10 @@ It captures menus, settings, match screens, countdown, pause, results, and
 phone/tablet layouts to `/tmp/ghockey-*.png`. Tests and audio-generation tools
 are excluded from Android exports.
 
-Current validation including native volume-slider touch input: **959 gameplay
-checks passed**. Volume tests cover scaled touch coordinates at four display sizes,
+Current validation after removing background audio, including native sound effects
+slider touch input: **919 gameplay checks passed**. Volume tests cover scaled touch coordinates at four display sizes,
 dragging beyond the slider, ignoring other fingers, cancellation, settings closure,
-focus loss, mouse input, audio values, and persistence of both volume settings.
+focus loss, mouse input, audio values, and persistence of sound effects volume.
 The slider fix has not yet been verified on a physical Android device.
 
 Mode selection and Start verification is included in the same suite.
