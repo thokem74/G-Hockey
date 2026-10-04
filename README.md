@@ -101,6 +101,14 @@ bloom is added to ordinary colors. Reduced effects disables glow, returns neon
 emission to 1.0, and removes particles, trails, and screen shake while keeping
 clear outlines and all gameplay rules. HDR stays enabled.
 
+Wall impacts briefly brighten the struck L-shaped wall section, preserving its
+cyan or magenta color. Flashes share the wall sound's impact threshold, cooldown,
+and strength, including adjoining sections for goal-post hits. Muting sound
+keeps the visual feedback; Reduced effects disables it. The rink Inspector
+exposes flash duration (0.14 seconds) and maximum added brightness (1.5), with
+independent smooth fades and resets on pause, round reset, and menu return.
+
+
 ## Android build
 
 Install matching **Godot 4.7.2 export templates**, Android SDK/build tools, and
@@ -152,18 +160,22 @@ It captures menus, settings, match screens, countdown, pause, results, and
 phone/tablet layouts to `/tmp/ghockey-*.png`. Tests and audio-generation tools
 are excluded from Android exports.
 
-Current validation after removing background audio, including native sound effects
-slider touch input: **919 gameplay checks passed**. Volume tests cover scaled touch coordinates at four display sizes,
+Current validation including wall-impact flashes and native sound effects
+slider touch input: **1147 gameplay checks passed**. Volume tests cover scaled touch coordinates at four display sizes,
 dragging beyond the slider, ignoring other fingers, cancellation, settings closure,
 focus loss, mouse input, audio values, and persistence of sound effects volume.
-The slider fix has not yet been verified on a physical Android device.
+Wall-flash tests cover all sections, side/end walls and posts, threshold and
+cooldown, strength, repeated hits, fade completion, lifecycle resets, muted sound,
+and Reduced effects. The visual sequence includes peak/fading/restored flashes
+at phone, tall-phone, and tablet sizes, producing 60 captures.
+The slider fix and wall flashes have not yet been verified on a physical Android device.
 
 Mode selection and Start verification is included in the same suite.
 Tests cover mouse and native touch selection, mutually exclusive mode toggles,
 repeated selection, highlighting, option cycling and wraparound, Start with the
 chosen mode/AI/goal target, rematches, and preserving selections through settings.
 Alignment and touch targets are checked at four display sizes. The rendered
-verification sequence produced 33 captures at phone, tall-phone, and tablet sizes,
+earlier verification sequence produced 33 captures at phone, tall-phone, and tablet sizes,
 including both mode selections and Reduced effects. Android export/device testing
 is deferred to a separate requested step.
 

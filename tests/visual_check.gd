@@ -3,8 +3,11 @@ extends Node
 func _ready() -> void:
 	call_deferred("_run")
 
-func capture(main: Control, name: String) -> void:
-	await get_tree().create_timer(0.25).timeout
+func capture(main: Control, name: String, delay: float = 0.25) -> void:
+	if delay > 0.0:
+		await get_tree().create_timer(delay).timeout
+	# Give shader updates a complete rendered frame before reading the texture.
+	await RenderingServer.frame_post_draw
 	await RenderingServer.frame_post_draw
 	var image := main.get_viewport().get_texture().get_image()
 	if main.get_viewport().use_hdr_2d:
@@ -53,6 +56,26 @@ func _capture_layout(main: Control, suffix: String) -> void:
 	arena.set_physics_process(false)
 	arena._physics_process(3.01)
 	await capture(main, "game" + suffix)
+	# Freeze only the flash clock so captures cannot miss this short envelope.
+	var original_puck_position := arena.puck.position
+	for section in HockeyRink.WALL_SECTIONS:
+		var left := section in [&"TopLeft", &"BottomLeft"]
+		var upper := section in [&"TopLeft", &"TopRight"]
+		var bounds := arena.layout.bounds
+		arena.puck.position = Vector2(
+			bounds.position.x + HockeyPuck.RADIUS + 4 if left else bounds.end.x - HockeyPuck.RADIUS - 4,
+			lerpf(bounds.position.y, bounds.end.y, 0.25 if upper else 0.75)
+		)
+		arena.rink.flash_wall(section, 1000)
+		arena.rink.set_process(false)
+		await capture(main, "wall-" + String(section) + "-peak" + suffix, 0.0)
+		arena.rink._process(arena.rink.flash_duration * 0.5)
+		arena.rink.set_process(false)
+		await capture(main, "wall-" + String(section) + "-fade" + suffix, 0.0)
+		arena.rink._process(arena.rink.flash_duration)
+	arena.puck.position = original_puck_position
+	await capture(main, "walls-restored" + suffix, 0.0)
+
 	# Render an actual trail and both particle types with the HDR material.
 	for index in range(12):
 		arena.effects.update_trail(arena.puck.position - Vector2(index * 8, index * 5), true)
@@ -75,6 +98,7 @@ func _capture_layout(main: Control, suffix: String) -> void:
 	await capture(main, "duel" + suffix)
 	Settings.reduced_effects = true
 	main._apply_feedback_visibility()
+	arena.rink.flash_wall(&"BottomLeft", 1000)
 	await capture(main, "reduced-game" + suffix)
 	main._show_menu()
 	await capture(main, "reduced-menu" + suffix)

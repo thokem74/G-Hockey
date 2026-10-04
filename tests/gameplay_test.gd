@@ -76,6 +76,7 @@ func _run() -> void:
 		_test_layout(display_size)
 		_test_controls()
 		_test_collisions()
+		_test_wall_flashes()
 		_test_scoring()
 		_test_score_buttons()
 		_test_ai()
@@ -460,3 +461,93 @@ func _test_settings() -> void:
 		file.close()
 	else:
 		DirAccess.remove_absolute(save_path)
+
+func wall_boost(index: int) -> float:
+	return float(arena.rink.wall_materials[index].get_shader_parameter("impact_boost"))
+
+func _test_wall_flashes() -> void:
+	var old_reduced := Settings.reduced_effects
+	var old_volume := Settings.effects_volume
+	Settings.reduced_effects = false
+	main._apply_feedback_visibility()
+	var rink := arena.rink
+	var puck := arena.puck
+	var bounds := arena.layout.bounds
+	var middle := arena.layout.center
+	# Exercise collision dispatch, not just the visual helper.
+	for index in range(4):
+		var left := index % 2 == 0
+		var upper := index < 2
+		var wall_x := bounds.position.x if left else bounds.end.x
+		var wall_y := bounds.position.y if upper else bounds.end.y
+		for end_wall in [false, true]:
+			rink.clear_flashes()
+			puck.reset_at(Vector2(wall_x + (80 if left else -80), wall_y + (80 if upper else -80)))
+			if end_wall:
+				puck.position.y = wall_y + (10 if upper else -10)
+				puck.velocity = Vector2(0, -500 if upper else 500)
+			else:
+				puck.position.x = wall_x + (10 if left else -10)
+				puck.velocity = Vector2(-500 if left else 500, 0)
+			puck._collide_walls()
+			check(is_equal_approx(wall_boost(index), 0.75), "Collision flashes correct side/end section")
+			for other in range(4):
+				if other != index:
+					check(wall_boost(other) == 0, "Wall flash leaves unrelated sections unchanged")
+		# Posts belong to the adjacent end-wall section.
+		rink.clear_flashes()
+		var post: Vector2 = arena.layout.goal_posts[index]
+		puck.reset_at(post + Vector2(0, 10 if upper else -10))
+		puck.velocity = Vector2(0, -500 if upper else 500)
+		puck._collide_walls()
+		check(wall_boost(index) > 0, "Goal post flashes adjoining wall section")
+		check(rink.wall_materials[index] != main.get_node("Content/Menu/Preview/Rink").get_node(String(rink.WALL_SECTIONS[index]) + "Edge").material, "Gameplay flash material is separate from preview")
+	for index in [2, 3]:
+		rink.clear_flashes()
+		puck.reset_at(Vector2(bounds.position.x + 10 if index == 2 else bounds.end.x - 10, middle.y))
+		puck.velocity = Vector2(-500 if index == 2 else 500, 0)
+		puck._collide_walls()
+		check(wall_boost(index) > 0, "Exact midfield contact belongs to lower section")
+	rink.clear_flashes()
+	puck.collision_cooldown = 0.0
+	puck._emit_impact(60, false, &"TopLeft")
+	check(wall_boost(0) == 0, "Subthreshold sound event does not flash")
+	puck._emit_impact(500, false, &"TopLeft")
+	puck._emit_impact(1000, false, &"TopRight")
+	check(wall_boost(0) == 0.75 and wall_boost(1) == 0, "Cooldown suppresses sound and flash together")
+	rink.clear_flashes()
+	puck.collision_cooldown = 0.0
+	puck._emit_impact(1000, true, &"")
+	check(not rink.is_processing(), "Paddle impact never flashes wall")
+	Settings.effects_volume = 0.0
+	puck.collision_cooldown = 0.0
+	puck._emit_impact(1000, false, &"TopLeft")
+	check(wall_boost(0) == 1.5, "Muted sound retains full-strength visual feedback")
+	rink._process(rink.flash_duration * 0.5)
+	check(is_equal_approx(wall_boost(0), 0.75), "Flash smoothly fades at half duration")
+	rink.flash_wall(&"TopLeft", 200)
+	check(wall_boost(0) == 1.5 and rink.flash_remaining[0] == rink.flash_duration, "Repeat contact refreshes fade and retains brighter peak")
+	rink.flash_wall(&"BottomRight", 200)
+	check(is_equal_approx(wall_boost(3), 0.3), "Flash strength matches sound gain independently")
+	rink._process(rink.flash_duration)
+	check(wall_boost(0) == 0 and wall_boost(3) == 0 and not rink.is_processing(), "Finished flashes restore baseline and stop processing")
+	for reset in ["pause", "round", "rematch", "menu", "layout"]:
+		start_match()
+		rink.flash_wall(&"TopLeft", 1000)
+		match reset:
+			"pause": arena.pause_match()
+			"round": arena._reset_round(0)
+			"rematch": arena.start_match(arena.options)
+			"menu": arena.return_to_menu()
+			"layout": rink.apply_layout(arena.layout)
+		check(wall_boost(0) == 0 and not rink.is_processing(), "Lifecycle clears flash: " + reset)
+	rink.flash_wall(&"TopLeft", 1000)
+	Settings.reduced_effects = true
+	main._apply_feedback_visibility()
+	check(wall_boost(0) == 0 and not rink.is_processing(), "Reduced effects clears active flash immediately")
+	rink.flash_wall(&"TopRight", 1000)
+	check(wall_boost(1) == 0, "Reduced effects prevents new flashes")
+	Settings.effects_volume = old_volume
+	Settings.reduced_effects = old_reduced
+	main._apply_feedback_visibility()
+	start_match()

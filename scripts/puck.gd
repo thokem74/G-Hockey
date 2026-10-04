@@ -1,7 +1,7 @@
 class_name HockeyPuck
 extends Node2D
 
-signal impact(location: Vector2, strength: float, paddle_hit: bool)
+signal impact(location: Vector2, strength: float, paddle_hit: bool, wall_section: StringName)
 signal goal_scored(player: int)
 
 const RADIUS := 20.0
@@ -53,18 +53,18 @@ func _collide_paddle(paddle: HockeyPaddle, sample: Vector2) -> void:
 	if incoming < 0.0:
 		velocity -= normal * incoming * 1.92
 		velocity = velocity.limit_length(MAX_SPEED)
-		_emit_impact(absf(incoming), true)
+		_emit_impact(absf(incoming), true, &"")
 
 func _collide_walls() -> void:
 	var puck_bounds := layout.bounds.grow(-RADIUS)
 	if position.x < puck_bounds.position.x:
 		position.x = puck_bounds.position.x
 		velocity.x = absf(velocity.x)
-		_emit_impact(absf(velocity.x), false)
+		_emit_impact(absf(velocity.x), false, _wall_section(position))
 	elif position.x > puck_bounds.end.x:
 		position.x = puck_bounds.end.x
 		velocity.x = -absf(velocity.x)
-		_emit_impact(absf(velocity.x), false)
+		_emit_impact(absf(velocity.x), false, _wall_section(position))
 	# The puck must fit fully through the goal; round posts close the corners.
 	for post in layout.goal_posts:
 		var separation: Vector2 = position - post
@@ -73,18 +73,24 @@ func _collide_walls() -> void:
 			position = post + normal * (RADIUS + RinkLayout.POST_RADIUS + 0.1)
 			if velocity.dot(normal) < 0.0:
 				velocity = velocity.bounce(normal)
-				_emit_impact(velocity.length(), false)
+				_emit_impact(velocity.length(), false, _wall_section(post))
 	var outside_goal := position.x < layout.goal_left or position.x > layout.goal_right
 	if outside_goal and position.y < puck_bounds.position.y and velocity.y < 0.0:
 		position.y = puck_bounds.position.y
 		velocity.y = absf(velocity.y)
-		_emit_impact(absf(velocity.y), false)
+		_emit_impact(absf(velocity.y), false, _wall_section(position))
 	elif outside_goal and position.y > puck_bounds.end.y and velocity.y > 0.0:
 		position.y = puck_bounds.end.y
 		velocity.y = -absf(velocity.y)
-		_emit_impact(absf(velocity.y), false)
+		_emit_impact(absf(velocity.y), false, _wall_section(position))
 
-func _emit_impact(strength: float, paddle_hit: bool) -> void:
+func _wall_section(location: Vector2) -> StringName:
+	# Strict comparison assigns a contact exactly at midfield to the lower half.
+	if location.y < layout.center.y:
+		return &"TopLeft" if location.x < layout.center.x else &"TopRight"
+	return &"BottomLeft" if location.x < layout.center.x else &"BottomRight"
+
+func _emit_impact(strength: float, paddle_hit: bool, wall_section: StringName) -> void:
 	if collision_cooldown <= 0.0 and strength > 60.0:
-		impact.emit(position, strength, paddle_hit)
+		impact.emit(position, strength, paddle_hit, wall_section)
 		collision_cooldown = 0.035

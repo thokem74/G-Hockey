@@ -114,6 +114,7 @@ func start_match(match_options: MatchOptions) -> void:
 	_begin_countdown()
 
 func return_to_menu() -> void:
+	rink.clear_flashes()
 	state = State.MENU
 	puck.active = false
 	controls.clear()
@@ -128,6 +129,7 @@ func pause_match() -> void:
 	if state not in [State.PLAYING, State.COUNTDOWN, State.GOAL]:
 		return
 	# A second pause during a resume countdown must retain a pending goal reset.
+	rink.clear_flashes()
 	paused_state = countdown_destination if state == State.COUNTDOWN else state
 	state = State.PAUSED
 	puck.active = false
@@ -160,6 +162,7 @@ func handle_input(event: InputEvent) -> void:
 		controls.drag(-1, get_global_transform_with_canvas().affine_inverse() * event.position)
 
 func _reset_round(server: int) -> void:
+	rink.clear_flashes()
 	bottom.reset_at(layout.paddle_start(0))
 	top.reset_at(layout.paddle_start(1))
 	puck.reset_at(layout.serve_position(server))
@@ -198,9 +201,11 @@ func _on_goal(player: int) -> void:
 		Audio.play_sound("goal")
 	state_changed.emit()
 
-func _on_impact(location: Vector2, strength: float, paddle_hit: bool) -> void:
+func _on_impact(location: Vector2, strength: float, paddle_hit: bool, wall_section: StringName) -> void:
 	Audio.play_sound("paddle" if paddle_hit else "wall", strength / 1000.0)
 	effects.impact(location, CYAN if paddle_hit else Color("b4ff85"))
+	if not paddle_hit:
+		rink.flash_wall(wall_section, strength)
 
 func _update_shake(delta: float) -> void:
 	shake_remaining = maxf(shake_remaining - delta, 0.0)

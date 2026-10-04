@@ -258,6 +258,8 @@ func _back() -> void:
 		_pause()
 
 func _apply_feedback_visibility() -> void:
+	if Settings.reduced_effects:
+		arena.rink.clear_flashes()
 	arena.effects.sparks.visible = not Settings.reduced_effects
 	arena.effects.burst.visible = not Settings.reduced_effects
 	arena.effects.trail.visible = not Settings.reduced_effects

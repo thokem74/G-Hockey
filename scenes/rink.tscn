@@ -1,7 +1,33 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/rink.gd" id="1"]
 [ext_resource type="Material" path="res://resources/neon_emission.tres" id="Neon"]
+
+[ext_resource type="Shader" path="res://shaders/neon_emission.gdshader" id="EmissionShader"]
+
+[sub_resource type="ShaderMaterial" id="TopLeftFlash"]
+resource_local_to_scene = true
+shader = ExtResource("EmissionShader")
+shader_parameter/emission_strength = 2.5
+shader_parameter/impact_boost = 0.0
+
+[sub_resource type="ShaderMaterial" id="TopRightFlash"]
+resource_local_to_scene = true
+shader = ExtResource("EmissionShader")
+shader_parameter/emission_strength = 2.5
+shader_parameter/impact_boost = 0.0
+
+[sub_resource type="ShaderMaterial" id="BottomLeftFlash"]
+resource_local_to_scene = true
+shader = ExtResource("EmissionShader")
+shader_parameter/emission_strength = 2.5
+shader_parameter/impact_boost = 0.0
+
+[sub_resource type="ShaderMaterial" id="BottomRightFlash"]
+resource_local_to_scene = true
+shader = ExtResource("EmissionShader")
+shader_parameter/emission_strength = 2.5
+shader_parameter/impact_boost = 0.0
 
 [node name="Rink" type="Node2D"]
 script = ExtResource("1")
@@ -201,28 +227,28 @@ width = 1.0
 default_color = Color(0.2, 0.6, 0.8, 0.035)
 
 [node name="TopLeftEdge" type="Line2D" parent="." groups=["neon_emitters"]]
-material = ExtResource("Neon")
+material = SubResource("TopLeftFlash")
 points = PackedVector2Array(12, 640, 12, 12, 270, 12)
 width = 4.0
 default_color = Color(1, 0.22, 0.55, 0.9)
 antialiased = true
 
 [node name="TopRightEdge" type="Line2D" parent="." groups=["neon_emitters"]]
-material = ExtResource("Neon")
+material = SubResource("TopRightFlash")
 points = PackedVector2Array(450, 12, 708, 12, 708, 640)
 width = 4.0
 default_color = Color(1, 0.22, 0.55, 0.9)
 antialiased = true
 
 [node name="BottomLeftEdge" type="Line2D" parent="." groups=["neon_emitters"]]
-material = ExtResource("Neon")
+material = SubResource("BottomLeftFlash")
 points = PackedVector2Array(12, 640, 12, 1268, 270, 1268)
 width = 4.0
 default_color = Color(0.2, 0.9, 1, 0.9)
 antialiased = true
 
 [node name="BottomRightEdge" type="Line2D" parent="." groups=["neon_emitters"]]
-material = ExtResource("Neon")
+material = SubResource("BottomRightFlash")
 points = PackedVector2Array(450, 1268, 708, 1268, 708, 640)
 width = 4.0
 default_color = Color(0.2, 0.9, 1, 0.9)

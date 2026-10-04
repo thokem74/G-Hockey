@@ -41,9 +41,8 @@ common/physics_ticks_per_second=120
 
 [rendering]
 
-renderer/rendering_method="mobile"
-renderer/rendering_method.mobile="mobile"
 rendering_device/fallback_to_opengl3=false
-viewport/hdr_2d=true
+renderer/rendering_method="mobile"
 textures/vram_compression/import_etc2_astc=true
+viewport/hdr_2d=true
 environment/defaults/default_clear_color=Color(0.018, 0.029, 0.055, 1)
