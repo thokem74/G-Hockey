@@ -2,6 +2,10 @@ extends Node
 
 var failures: int = 0
 var checks: int = 0
+var pause_transitions: int = 0
+var main: Control
+var arena: HockeyArena
+var viewport: SubViewport
 
 func _ready() -> void:
 	call_deferred("_run")
@@ -12,15 +16,39 @@ func check(condition: bool, description: String) -> void:
 		failures += 1
 		push_error(description)
 
+func start_match(players: int = 2) -> void:
+	main.options.player_count = players
+	main.score_target.selected = 0
+	main._start_match()
+	arena.set_physics_process(false)
+	arena._physics_process(3.01)
+
+func touch(index: int, point: Vector2, pressed: bool) -> void:
+	var event := InputEventScreenTouch.new()
+	event.index = index
+	event.pressed = pressed
+	event.position = arena.get_global_transform_with_canvas() * point
+	viewport.push_input(event, true)
+
+func drag(index: int, point: Vector2) -> void:
+	var event := InputEventScreenDrag.new()
+	event.index = index
+	event.position = arena.get_global_transform_with_canvas() * point
+	viewport.push_input(event, true)
+
 func _run() -> void:
-	var main := load("res://scenes/main.tscn").instantiate() as Control
-	get_tree().root.add_child(main)
+	viewport = SubViewport.new()
+	viewport.size = Vector2i(720, 1280)
+	get_tree().root.add_child(viewport)
+	main = load("res://scenes/main.tscn").instantiate() as Control
+	viewport.add_child(main)
 	await get_tree().process_frame
-	var arena := main.get_node("Content/Arena") as HockeyArena
-	var options := MatchOptions.new()
-	options.player_count = 2
-	options.winning_score_index = 0
-	main.options = options
+	arena = main.get_node("Gameplay/Arena") as HockeyArena
+	arena.state_changed.connect(func() -> void:
+		if arena.state == HockeyArena.State.PAUSED:
+			pause_transitions += 1
+	)
+	main.options.player_count = 2
 	main.score_target.selected = 0
 	main._start_match()
 	arena.set_physics_process(false)
@@ -28,122 +56,216 @@ func _run() -> void:
 	arena._physics_process(3.01)
 	check(arena.state == HockeyArena.State.PLAYING, "Countdown activates puck")
 
-	# Exercise Godot's event dispatch, not just the controller methods.
-	var transform := arena.get_global_transform_with_canvas()
-	var press := InputEventScreenTouch.new()
-	press.index = 7
-	press.pressed = true
-	press.position = transform * Vector2(360, 985)
-	get_tree().root.push_input(press, true)
+	for display_size in [Vector2i(720, 1280), Vector2i(720, 1560), Vector2i(720, 1620), Vector2i(960, 1280)]:
+		viewport.size = display_size
+		await get_tree().process_frame
+		start_match()
+		_test_layout(display_size)
+		_test_controls()
+		_test_collisions()
+		_test_scoring()
+		_test_score_buttons()
+		_test_ai()
+
+	# An active resize pauses without resetting score, momentum, or ownership.
+	start_match()
+	arena.scores = [1, 2]
+	arena.puck.velocity = Vector2(500, -400)
+	var old_bounds := arena.layout.bounds
+	var old_fraction := (arena.puck.position - old_bounds.position) / old_bounds.size
+	touch(3, arena.bottom.position, true)
+	viewport.size = Vector2i(720, 1620)
 	await get_tree().process_frame
-	check(arena.controls.fingers.has(7), "Touch passes through gameplay UI to arena")
-	var drag := InputEventScreenDrag.new()
-	drag.index = 7
-	drag.position = transform * Vector2(460, 900)
-	get_tree().root.push_input(drag, true)
+	var new_fraction := (arena.puck.position - arena.layout.bounds.position) / arena.layout.bounds.size
+	check(arena.state == HockeyArena.State.PAUSED and main.overlay.visible, "Active resize opens pause overlay")
+	check(arena.scores == [1, 2], "Resize preserves scores")
+	check(arena.puck.velocity == Vector2(500, -400), "Resize preserves puck momentum")
+	check(old_fraction.is_equal_approx(new_fraction), "Resize preserves proportional puck position")
+	check(arena.controls.fingers.is_empty(), "Resize releases captured fingers")
+	main._resume()
+	check(arena.state == HockeyArena.State.COUNTDOWN, "Resize resume uses countdown")
+	arena._physics_process(3.01)
+	check(arena.puck.velocity == Vector2(500, -400), "Countdown does not change preserved momentum")
+	start_match()
+	arena._on_goal(0)
+	main._pause()
+	main._resume()
+	main._pause()
+	main._resume()
+	arena._physics_process(3.01)
+	check(arena.state == HockeyArena.State.GOAL and arena.scores == [1, 0], "Repeated pause retains pending goal reset")
+	arena._physics_process(1.5)
+	check(arena.puck.position.is_equal_approx(arena.layout.serve_position(1)), "Interrupted goal still serves to conceding side")
+
+	# Insets move only the HUD; the rink still reaches the full viewport.
+	var safe := Rect2(0, 60, 670, arena.layout.logical_size.y - 100)
+	main._layout_scores(safe)
+	for button: Button in [main.get_node("Gameplay/HUD/TopScore"), main.get_node("Gameplay/HUD/BottomScore")]:
+		check(safe.encloses(button.get_rect()), "Score target fits inside safe area")
+	check(arena.layout.bounds.end.x == 708, "Safe insets do not shrink rink")
+	main._fit_content()
+	main._show_setup(1)
+	check("Tap either score to pause" in main.get_node("Content/Setup/Hint").text, "Setup explains score buttons")
+	_test_settings()
+	main.queue_free()
+	viewport.queue_free()
 	await get_tree().process_frame
-	check(arena.bottom.target.is_equal_approx(Vector2(460, 900)), "Touch drag transforms viewport coordinates")
-	press.pressed = false
-	press.position = transform * Vector2(600, 52)
-	get_tree().root.push_input(press, true)
-	check(not arena.controls.fingers.has(7), "Touch release over a HUD button ends finger ownership")
-	arena.controls.clear()
+	print("Gameplay checks: %d passed, %d failed" % [checks - failures, failures])
+	get_tree().quit(1 if failures else 0)
+
+func _test_layout(display_size: Vector2i) -> void:
+	var layout := arena.layout
+	check(is_equal_approx(layout.logical_size.y, 720.0 * display_size.y / display_size.x), "Logical height follows display aspect")
+	check(is_equal_approx(main.gameplay.scale.x, main.gameplay.scale.y), "Gameplay scales uniformly")
+	check((main.gameplay.size * main.gameplay.scale).is_equal_approx(Vector2(display_size)), "Gameplay covers whole viewport")
+	check(layout.bounds.position == Vector2(12, 12) and layout.bounds.end == layout.logical_size - Vector2(12, 12), "Rails use only twelve-unit edge inset")
+	check(arena.controls.layout == layout and arena.puck.layout == layout and arena.ai.layout == layout, "Input, physics, and AI share geometry")
+	check(arena.rink.get_node("CenterCircle").position == layout.center, "Visible center circle matches physics center")
+	check(arena.rink.get_node("TopLeftEdge").points[1] == layout.bounds.position, "Visible rails match collision bounds")
+	check(arena.bottom.position.is_equal_approx(layout.paddle_start(0)), "Bottom paddle uses relative starting position")
+	check(arena.top.position.is_equal_approx(layout.paddle_start(1)), "Top paddle uses relative starting position")
+	check(arena.puck.position.is_equal_approx(layout.serve_position(0)), "Serve uses relative starting position")
+	check(main.countdown.get_rect().get_center().is_equal_approx(layout.center), "Countdown remains centered")
+	check(main.modal_dim.size.is_equal_approx(Vector2(display_size)), "Modal dim covers whole display")
+	check(not main.hud.has_node("Pause") and not main.hud.has_node("Brand"), "Gameplay has no header or separate pause button")
+
+func _test_controls() -> void:
+	var bottom_start := arena.bottom.position
+	var top_start := arena.top.position
+	touch(0, bottom_start - Vector2(20, 5), true)
+	touch(1, top_start + Vector2(20, 5), true)
+	touch(2, bottom_start, true)
+	check(arena.controls.fingers.size() == 2, "Two independent touches; third touch ignored")
+	drag(0, bottom_start + Vector2(100, -100))
+	drag(1, top_start + Vector2(-100, 100))
+	check(arena.bottom.target.is_equal_approx(bottom_start + Vector2(120, -95)), "Bottom offset preserved through UI dispatch")
+	check(arena.top.target.is_equal_approx(top_start + Vector2(-120, 95)), "Top offset preserved through UI dispatch")
+	drag(0, arena.top.position)
+	arena.bottom.move_toward_target(1.0)
+	check(arena.bottom.position.y >= arena.layout.center.y + HockeyPaddle.RADIUS, "Paddle cannot cross center")
+	var score := main.get_node("Gameplay/HUD/BottomScore") as Button
+	touch(0, score.get_rect().get_center(), false)
+	check(not arena.controls.fingers.has(0) and arena.controls.fingers.has(1), "Paddle release over score ends only that finger")
+	check(arena.state == HockeyArena.State.PLAYING, "Ending paddle drag over score does not pause")
+	touch(1, top_start, false)
 	var mouse := InputEventMouseButton.new()
 	mouse.button_index = MOUSE_BUTTON_LEFT
 	mouse.pressed = true
-	mouse.position = transform * Vector2(360, 985)
-	get_tree().root.push_input(mouse, true)
-	await get_tree().process_frame
-	check(arena.controls.fingers.has(-1), "Mouse passes through gameplay UI to arena")
+	mouse.position = arena.get_global_transform_with_canvas() * arena.bottom.position
+	viewport.push_input(mouse, true)
+	check(arena.controls.fingers.has(-1), "Mouse reaches arena")
 	mouse.pressed = false
-	get_tree().root.push_input(mouse, true)
-	arena.controls.clear()
+	viewport.push_input(mouse, true)
+	check(arena.controls.fingers.is_empty(), "Mouse release clears ownership")
 
-	# Finger ownership, offsets, ignored extra fingers, and crossing the midline.
-	arena.controls.press(0, Vector2(340, 980))
-	arena.controls.press(1, Vector2(380, 350))
-	arena.controls.press(2, Vector2(400, 900))
-	check(arena.controls.fingers.size() == 2, "Two independent touches; third touch ignored")
-	arena.controls.drag(0, Vector2(500, 800))
-	arena.controls.drag(1, Vector2(200, 450))
-	check(arena.bottom.target == Vector2(520, 805), "Bottom finger offset preserved")
-	check(arena.top.target == Vector2(180, 455), "Top finger offset preserved")
-	arena.controls.drag(0, Vector2(500, 300))
-	arena.bottom.move_toward_target(1.0)
-	check(arena.bottom.position.y >= 714.0, "Paddle cannot cross center")
-	arena.controls.release(1)
-	check(arena.controls.fingers.has(0) and not arena.controls.fingers.has(1), "Releasing one finger preserves the other")
-	arena.controls.clear()
-
-	# Fast puck must bounce, and a fast paddle must transfer momentum.
-	arena.puck.reset_at(Vector2(75, 700))
-	arena.puck.active = true
-	arena.puck.velocity = Vector2(-1800, 0)
-	arena.puck.simulate(1.0 / 30.0, [])
-	check(arena.puck.position.x >= 68.0 and arena.puck.velocity.x > 0, "Fast puck cannot tunnel through side wall")
-	arena.puck.reset_at(Vector2(150, 235))
-	arena.puck.active = true
-	arena.puck.velocity = Vector2(0, -1800)
-	arena.puck.simulate(1.0 / 30.0, [])
-	check(arena.puck.position.y >= 230.0 and arena.puck.velocity.y > 0, "Top wall outside goal remains solid")
-	arena.bottom.reset_at(Vector2(360, 920))
-	arena.bottom.target = Vector2(360, 760)
-	arena.puck.reset_at(Vector2(360, 800))
+func _test_collisions() -> void:
+	var layout := arena.layout
+	var bounds := layout.bounds.grow(-HockeyPuck.RADIUS)
+	for direction in [-1, 1]:
+		arena.puck.reset_at(Vector2(bounds.position.x + 7 if direction == -1 else bounds.end.x - 7, layout.center.y))
+		arena.puck.active = true
+		arena.puck.velocity = Vector2(direction * 1800, 0)
+		arena.puck.simulate(1.0 / 30.0, [])
+		check(bounds.grow(0.01).has_point(arena.puck.position) and arena.puck.velocity.x * direction < 0, "Fast puck bounces from side wall")
+	for player in [0, 1]:
+		var direction := -1 if player == 0 else 1
+		arena.puck.reset_at(Vector2(150, bounds.position.y + 5 if player == 0 else bounds.end.y - 5))
+		arena.puck.active = true
+		arena.puck.velocity = Vector2(0, direction * 1800)
+		arena.puck.simulate(1.0 / 30.0, [])
+		check(bounds.grow(0.01).has_point(arena.puck.position) and arena.puck.velocity.y * direction < 0, "End wall outside goal remains solid")
+	# Each rounded goal post must deflect an incoming puck without scoring.
+	for post in layout.goal_posts:
+		var direction := -1 if post.y < layout.center.y else 1
+		arena.puck.reset_at(post + Vector2(0, -direction * 35))
+		arena.puck.active = true
+		arena.puck.velocity = Vector2(0, direction * 1200)
+		arena.puck.simulate(1.0 / 30.0, [])
+		check(arena.puck.active and arena.puck.velocity.y * direction < 0, "Goal post deflects puck")
+	arena.bottom.reset_at(layout.serve_position(0) + Vector2(0, 120))
+	arena.bottom.target = layout.serve_position(0) - Vector2(0, 40)
+	arena.puck.reset_at(layout.serve_position(0))
 	arena.puck.active = true
 	for step in range(12):
 		arena.bottom.move_toward_target(1.0 / 120.0)
 		arena.puck.simulate(1.0 / 120.0, [arena.bottom])
-	check(arena.puck.velocity.y < -100 and arena.puck.velocity.length() <= 1800, "Moving paddle strikes stationary puck with capped speed")
+	check(arena.puck.velocity.y < -100 and arena.puck.velocity.length() <= 1800, "Moving paddle transfers capped momentum")
 
-	# Scoring is emitted by physics, once, then the conceding side serves.
-	arena.start_match(options)
-	arena.set_physics_process(false)
-	arena._physics_process(3.01)
-	arena.puck.position = Vector2(360, 220)
-	arena.puck.velocity = Vector2(0, -1200)
-	arena.puck.simulate(0.1, [])
-	check(arena.scores == [1, 0] and arena.state == HockeyArena.State.GOAL, "Top goal scores for bottom player")
-	arena.puck.simulate(0.1, [])
-	check(arena.scores == [1, 0], "Inactive puck does not duplicate goal")
-	arena._physics_process(1.5)
-	check(arena.puck.position.y == 520, "Conceding top player receives puck")
-	arena._physics_process(3.01)
-	arena.puck.velocity = Vector2(500, -400)
-	arena.pause_match()
-	var frozen_position := arena.puck.position
-	arena._physics_process(0.5)
-	check(arena.puck.position == frozen_position, "Pause freezes match")
-	arena.resume_match()
-	check(arena.state == HockeyArena.State.COUNTDOWN, "Resume starts countdown")
-	arena._physics_process(3.01)
-	check(arena.puck.velocity == Vector2(500, -400), "Resume preserves puck velocity")
-	arena._on_goal(0)
-	arena._physics_process(1.5)
-	arena._physics_process(3.01)
-	arena._on_goal(0)
-	check(arena.state == HockeyArena.State.FINISHED and arena.scores[0] == 3, "Winning score finishes match")
-	arena.start_match(options)
-	arena.set_physics_process(false)
+func _test_scoring() -> void:
+	for player in [0, 1]:
+		start_match()
+		var direction := -1 if player == 0 else 1
+		arena.puck.position = arena.layout.goal_position(player) - Vector2(0, direction * 10)
+		arena.puck.velocity = Vector2(0, direction * 1200)
+		arena.puck.simulate(0.1, [])
+		check(arena.scores[player] == 1 and arena.state == HockeyArena.State.GOAL, "Goal awards correct player")
+		arena.puck.simulate(0.1, [])
+		check(arena.scores[player] == 1, "Goal counted only once")
+		arena._physics_process(1.5)
+		check(arena.puck.position.is_equal_approx(arena.layout.serve_position(1 - player)), "Conceding player serves next")
+	start_match()
+	for goal in range(3):
+		arena._on_goal(0)
+		if goal < 2:
+			arena._physics_process(1.5)
+			arena._physics_process(3.01)
+	check(arena.state == HockeyArena.State.FINISHED and arena.scores[0] == 3, "Score target finishes match")
+	start_match()
 	check(arena.scores == [0, 0], "Rematch resets scores")
+	for index in range(4):
+		var options := MatchOptions.new()
+		options.winning_score_index = index
+		check(options.winning_score() == [3, 5, 7, 10][index], "Winning target mapping")
 
-	for target in range(4):
-		options.winning_score_index = target
-		check(options.winning_score() == [3, 5, 7, 10][target], "Winning target mapping")
+func _test_score_buttons() -> void:
+	for path in ["Gameplay/HUD/TopScore", "Gameplay/HUD/BottomScore"]:
+		for players in [1, 2]:
+			start_match(players)
+			var button := main.get_node(path) as Button
+			check(button.size.x >= 64 and button.size.y >= 64, "Score has large touch target")
+			arena.puck.velocity = Vector2(500, -400)
+			var previous_position := arena.puck.position
+			var previous_transitions := pause_transitions
+			touch(8, button.get_rect().get_center(), true)
+			touch(8, button.get_rect().get_center(), false)
+			check(arena.state == HockeyArena.State.PAUSED and main.overlay.visible, "Either score pauses solo and local matches")
+			check(pause_transitions == previous_transitions + 1, "Score tap pauses exactly once")
+			check(arena.controls.fingers.is_empty(), "Score touch never captures paddle")
+			arena._physics_process(0.5)
+			check(arena.puck.position == previous_position, "Pause freezes puck")
+			main._resume()
+			check(arena.state == HockeyArena.State.COUNTDOWN and not main.modal_dim.visible, "Resume starts countdown and removes dim")
+			arena._physics_process(3.01)
+			check(arena.puck.velocity == Vector2(500, -400), "Resume preserves momentum")
+	# Mouse clicks also activate the score button through Godot GUI dispatch.
+	start_match()
+	var button := main.get_node("Gameplay/HUD/BottomScore") as Button
+	var mouse := InputEventMouseButton.new()
+	mouse.button_index = MOUSE_BUTTON_LEFT
+	mouse.pressed = true
+	mouse.position = button.get_global_rect().get_center()
+	viewport.push_input(mouse, true)
+	mouse.pressed = false
+	viewport.push_input(mouse, true)
+	check(arena.state == HockeyArena.State.PAUSED, "Mouse click on score pauses")
+
+func _test_ai() -> void:
 	for level in range(4):
-		options.player_count = 1
-		options.difficulty = level
-		arena.start_match(options)
-		arena.set_physics_process(false)
+		main.difficulty.selected = level
+		start_match(1)
 		arena.ai.rng.seed = 42
-		arena.controls.press(1, Vector2(360, 350))
+		touch(1, arena.top.position, true)
 		check(arena.controls.fingers.is_empty(), "Solo mode ignores top-half touch")
 		for step in range(400):
-			arena.ai.update_target(1.0 / 120.0, arena.top, Vector2(80, 280), Vector2(-700, -500))
+			arena.ai.update_target(1.0 / 120.0, arena.top, arena.layout.serve_position(1), Vector2(-700, -500))
 			arena.top.move_toward_target(1.0 / 120.0, arena.ai.profile.movement_speed)
-		check(arena.top.court.grow(0.01).has_point(arena.top.position), "AI stays inside its court at every difficulty")
-	check(arena.ai.reflected_x(-4000) >= 68 and arena.ai.reflected_x(5000) <= 652, "AI predictions reflect distant wall bounces")
+		check(arena.top.court.grow(0.01).has_point(arena.top.position), "AI obeys adapted court at every difficulty")
+	var puck_bounds := arena.layout.bounds.grow(-HockeyPuck.RADIUS)
+	for value in [-4000, 5000]:
+		check(arena.ai.reflected_x(value) >= puck_bounds.position.x and arena.ai.reflected_x(value) <= puck_bounds.end.x, "AI reflects predictions inside actual walls")
 
-	# Settings are tested with a backup so developer preferences are restored.
+func _test_settings() -> void:
+	# Preserve developer preferences while exercising persistence.
 	var save_path := ProjectSettings.globalize_path("user://settings.cfg")
 	var existed := FileAccess.file_exists(save_path)
 	var backup := FileAccess.get_file_as_bytes(save_path) if existed else PackedByteArray()
@@ -160,8 +282,3 @@ func _run() -> void:
 		file.close()
 	else:
 		DirAccess.remove_absolute(save_path)
-	arena.return_to_menu()
-	main.queue_free()
-	await get_tree().process_frame
-	print("Gameplay checks: %d passed, %d failed" % [checks - failures, failures])
-	get_tree().quit(1 if failures else 0)

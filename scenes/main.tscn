@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1"]
 [ext_resource type="Theme" path="res://resources/neon_theme.tres" id="2"]
@@ -18,6 +18,20 @@ corner_radius_top_left = 16
 corner_radius_top_right = 16
 corner_radius_bottom_left = 16
 corner_radius_bottom_right = 16
+
+[sub_resource type="StyleBoxFlat" id="ScoreNormal"]
+bg_color = Color(0.02, 0.05, 0.08, 0.72)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_left = 12
+corner_radius_bottom_right = 12
+
+[sub_resource type="StyleBoxFlat" id="ScorePressed"]
+bg_color = Color(0.10, 0.20, 0.26, 0.9)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_left = 12
+corner_radius_bottom_right = 12
 
 [node name="GHockey" type="Control"]
 layout_mode = 3
@@ -40,14 +54,88 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
+[node name="Gameplay" type="Control" parent="."]
+visible = false
+layout_mode = 0
+offset_right = 720.0
+offset_bottom = 1280.0
+mouse_filter = 2
+
+[node name="Arena" parent="Gameplay" instance=ExtResource("3")]
+visible = false
+
+[node name="HUD" type="Control" parent="Gameplay"]
+layout_mode = 0
+offset_right = 720.0
+offset_bottom = 1280.0
+mouse_filter = 2
+
+[node name="TopScore" type="Button" parent="Gameplay/HUD" groups=["menu_buttons"]]
+layout_mode = 0
+offset_left = 640.0
+offset_top = 564.0
+offset_right = 704.0
+offset_bottom = 628.0
+custom_minimum_size = Vector2(64, 64)
+mouse_filter = 0
+text = "0"
+tooltip_text = "Top player score. Tap to pause."
+theme_override_font_sizes/font_size = 40
+theme_override_colors/font_color = Color(1, 0.22, 0.55, 1)
+theme_override_colors/font_hover_color = Color(1, 0.22, 0.55, 1)
+theme_override_colors/font_pressed_color = Color(1, 0.22, 0.55, 1)
+theme_override_styles/normal = SubResource("ScoreNormal")
+theme_override_styles/hover = SubResource("ScorePressed")
+theme_override_styles/pressed = SubResource("ScorePressed")
+
+[node name="BottomScore" type="Button" parent="Gameplay/HUD" groups=["menu_buttons"]]
+layout_mode = 0
+offset_left = 640.0
+offset_top = 652.0
+offset_right = 704.0
+offset_bottom = 716.0
+custom_minimum_size = Vector2(64, 64)
+mouse_filter = 0
+text = "0"
+tooltip_text = "Bottom player score. Tap to pause."
+theme_override_font_sizes/font_size = 40
+theme_override_colors/font_color = Color(0.2, 0.9, 1, 1)
+theme_override_colors/font_hover_color = Color(0.2, 0.9, 1, 1)
+theme_override_colors/font_pressed_color = Color(0.2, 0.9, 1, 1)
+theme_override_styles/normal = SubResource("ScoreNormal")
+theme_override_styles/hover = SubResource("ScorePressed")
+theme_override_styles/pressed = SubResource("ScorePressed")
+
+[node name="Countdown" type="Label" parent="Gameplay"]
+layout_mode = 0
+offset_left = 72.0
+offset_top = 586.0
+offset_right = 648.0
+offset_bottom = 746.0
+mouse_filter = 2
+text = ""
+theme_override_font_sizes/font_size = 88
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_fonts/font = ExtResource("5")
+
+[node name="ModalDim" type="ColorRect" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.005, 0.015, 0.03, 0.78)
+mouse_filter = 0
+
 [node name="Content" type="Control" parent="."]
 layout_mode = 0
 offset_right = 720.0
 offset_bottom = 1280.0
 mouse_filter = 2
 
-[node name="Arena" parent="Content" instance=ExtResource("3")]
-visible = false
 
 [node name="Menu" type="Control" parent="Content"]
 layout_mode = 0
@@ -99,16 +187,16 @@ vertical_alignment = 1
 theme_override_colors/font_color = Color(0.45, 0.6, 0.69, 1)
 
 [node name="Preview" type="Node2D" parent="Content/Menu"]
-position = Vector2(198, 332)
-scale = Vector2(0.45, 0.45)
+position = Vector2(226.8, 370)
+scale = Vector2(0.37, 0.37)
 
 [node name="Rink" parent="Content/Menu/Preview" instance=ExtResource("6")]
 
 [node name="CyanPaddle" parent="Content/Menu/Preview" instance=ExtResource("7")]
-position = Vector2(270, 920)
+position = Vector2(270, 1060)
 
 [node name="PinkPaddle" parent="Content/Menu/Preview" instance=ExtResource("7")]
-position = Vector2(450, 430)
+position = Vector2(450, 250)
 neon_color = Color(1, 0.22, 0.55, 1)
 
 [node name="Puck" parent="Content/Menu/Preview" instance=ExtResource("8")]
@@ -452,145 +540,6 @@ text = "SAVE & BACK"
 theme_override_styles/normal = SubResource("Primary")
 theme_override_colors/font_color = Color(0.02, 0.065, 0.10, 1)
 
-[node name="HUD" type="Control" parent="Content"]
-layout_mode = 0
-offset_left = 0.0
-offset_top = 0.0
-offset_right = 720.0
-offset_bottom = 1280.0
-visible = false
-mouse_filter = 2
-
-[node name="Brand" type="Label" parent="Content/HUD"]
-layout_mode = 0
-offset_left = 56.0
-offset_top = 34.0
-offset_right = 326.0
-offset_bottom = 68.0
-mouse_filter = 2
-text = "G-HOCKEY"
-theme_override_font_sizes/font_size = 23
-horizontal_alignment = 0
-vertical_alignment = 1
-theme_override_fonts/font = ExtResource("5")
-
-[node name="Pause" type="Button" parent="Content/HUD" groups=["menu_buttons"]]
-layout_mode = 0
-offset_left = 514.0
-offset_top = 26.0
-offset_right = 664.0
-offset_bottom = 84.0
-text = "PAUSE"
-
-[node name="TopName" type="Label" parent="Content/HUD"]
-layout_mode = 0
-offset_left = 60.0
-offset_top = 108.0
-offset_right = 300.0
-offset_bottom = 138.0
-mouse_filter = 2
-text = "NORMAL AI"
-theme_override_font_sizes/font_size = 18
-horizontal_alignment = 1
-vertical_alignment = 1
-theme_override_colors/font_color = Color(1, 0.22, 0.55, 1)
-theme_override_fonts/font = ExtResource("5")
-
-[node name="TopScore" type="Label" parent="Content/HUD"]
-layout_mode = 0
-offset_left = 60.0
-offset_top = 140.0
-offset_right = 300.0
-offset_bottom = 205.0
-mouse_filter = 2
-text = "0"
-theme_override_font_sizes/font_size = 52
-horizontal_alignment = 1
-vertical_alignment = 1
-theme_override_colors/font_color = Color(1, 0.22, 0.55, 1)
-theme_override_fonts/font = ExtResource("5")
-
-[node name="Versus" type="Label" parent="Content/HUD"]
-layout_mode = 0
-offset_left = 310.0
-offset_top = 140.0
-offset_right = 410.0
-offset_bottom = 180.0
-mouse_filter = 2
-text = "VS"
-theme_override_font_sizes/font_size = 18
-horizontal_alignment = 1
-vertical_alignment = 1
-theme_override_colors/font_color = Color(0.45, 0.6, 0.69, 1)
-theme_override_fonts/font = ExtResource("5")
-
-[node name="BottomName" type="Label" parent="Content/HUD"]
-layout_mode = 0
-offset_left = 420.0
-offset_top = 108.0
-offset_right = 660.0
-offset_bottom = 138.0
-mouse_filter = 2
-text = "YOU"
-theme_override_font_sizes/font_size = 18
-horizontal_alignment = 1
-vertical_alignment = 1
-theme_override_colors/font_color = Color(0.2, 0.9, 1, 1)
-theme_override_fonts/font = ExtResource("5")
-
-[node name="BottomScore" type="Label" parent="Content/HUD"]
-layout_mode = 0
-offset_left = 420.0
-offset_top = 140.0
-offset_right = 660.0
-offset_bottom = 205.0
-mouse_filter = 2
-text = "0"
-theme_override_font_sizes/font_size = 52
-horizontal_alignment = 1
-vertical_alignment = 1
-theme_override_colors/font_color = Color(0.2, 0.9, 1, 1)
-theme_override_fonts/font = ExtResource("5")
-
-[node name="Rule" type="Label" parent="Content/HUD"]
-layout_mode = 0
-offset_left = 72.0
-offset_top = 1170.0
-offset_right = 648.0
-offset_bottom = 1204.0
-mouse_filter = 2
-text = "FIRST TO 7 / SOLO"
-theme_override_font_sizes/font_size = 20
-horizontal_alignment = 1
-vertical_alignment = 1
-theme_override_fonts/font = ExtResource("5")
-
-[node name="Hint" type="Label" parent="Content/HUD"]
-layout_mode = 0
-offset_left = 72.0
-offset_top = 1212.0
-offset_right = 648.0
-offset_bottom = 1244.0
-mouse_filter = 2
-text = "DRAG YOUR HALF TO MOVE"
-theme_override_font_sizes/font_size = 16
-horizontal_alignment = 1
-vertical_alignment = 1
-theme_override_colors/font_color = Color(0.45, 0.6, 0.69, 1)
-
-[node name="Countdown" type="Label" parent="Content"]
-layout_mode = 0
-offset_left = 72.0
-offset_top = 586.0
-offset_right = 648.0
-offset_bottom = 746.0
-mouse_filter = 2
-text = ""
-theme_override_font_sizes/font_size = 88
-horizontal_alignment = 1
-vertical_alignment = 1
-theme_override_fonts/font = ExtResource("5")
-
 [node name="Overlay" type="Control" parent="Content"]
 layout_mode = 0
 offset_left = 0.0
@@ -599,14 +548,6 @@ offset_right = 720.0
 offset_bottom = 1280.0
 visible = false
 mouse_filter = 2
-
-[node name="Dim" type="ColorRect" parent="Content/Overlay"]
-layout_mode = 0
-offset_left = 0.0
-offset_top = 0.0
-offset_right = 720.0
-offset_bottom = 1280.0
-color = Color(0.005, 0.015, 0.03, 0.78)
 
 [node name="Card" type="Panel" parent="Content/Overlay"]
 layout_mode = 0

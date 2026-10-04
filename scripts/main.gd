@@ -7,13 +7,15 @@ var options: MatchOptions = DEFAULT_OPTIONS.duplicate() as MatchOptions
 var settings_return: String = "menu"
 
 @onready var content: Control = $Content
-@onready var arena: HockeyArena = $Content/Arena
+@onready var gameplay: Control = $Gameplay
+@onready var arena: HockeyArena = $Gameplay/Arena
+@onready var modal_dim: ColorRect = $ModalDim
 @onready var menu: Control = $Content/Menu
 @onready var setup: Control = $Content/Setup
 @onready var settings_panel: Control = $Content/SettingsPanel
-@onready var hud: Control = $Content/HUD
+@onready var hud: Control = $Gameplay/HUD
 @onready var overlay: Control = $Content/Overlay
-@onready var countdown: Label = $Content/Countdown
+@onready var countdown: Label = $Gameplay/Countdown
 @onready var difficulty: OptionButton = $Content/Setup/Difficulty
 @onready var score_target: OptionButton = $Content/Setup/ScoreTarget
 
@@ -53,6 +55,17 @@ func _notification(what: int) -> void:
 	elif what == NOTIFICATION_WM_GO_BACK_REQUEST:
 		_back()
 
+func _input(event: InputEvent) -> void:
+	# A paddle drag owns its finger until release, even over a score button.
+	var owned := false
+	if event is InputEventScreenTouch or event is InputEventScreenDrag:
+		owned = arena.controls.fingers.has(event.index)
+	elif event is InputEventMouseMotion or event is InputEventMouseButton:
+		owned = arena.controls.fingers.has(-1)
+	if owned:
+		arena.handle_input(event)
+		get_viewport().set_input_as_handled()
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
 		_back()
@@ -68,7 +81,9 @@ func _connect_buttons() -> void:
 	$Content/Setup/Start.pressed.connect(_start_match)
 	$Content/Setup/Back.pressed.connect(_show_menu)
 	$Content/SettingsPanel/Back.pressed.connect(_close_settings)
-	$Content/HUD/Pause.pressed.connect(_pause)
+	for score_button: Button in [$Gameplay/HUD/TopScore, $Gameplay/HUD/BottomScore]:
+		score_button.pressed.connect(_pause)
+		score_button.gui_input.connect(_on_score_input.bind(score_button))
 	$Content/Overlay/Resume.pressed.connect(_resume)
 	$Content/Overlay/Restart.pressed.connect(_start_match)
 	$Content/Overlay/Settings.pressed.connect(func() -> void: _show_settings("pause"))
@@ -78,53 +93,88 @@ func _connect_buttons() -> void:
 
 func _fit_content() -> void:
 	var viewport_size := get_viewport_rect().size
+	if viewport_size.x <= 0.0 or viewport_size.y <= 0.0:
+		return
+	var usable := _safe_area(viewport_size)
+	var fit := minf(usable.size.x / LOGICAL_SIZE.x, usable.size.y / LOGICAL_SIZE.y)
+	content.scale = Vector2.ONE * fit
+	content.position = usable.position + (usable.size - LOGICAL_SIZE * fit) * 0.5
+	# The game fills the viewport independently of the centered menu canvas.
+	var game_scale := viewport_size.x / RinkLayout.LOGICAL_WIDTH
+	var logical_size := viewport_size / game_scale
+	gameplay.scale = Vector2.ONE * game_scale
+	gameplay.size = logical_size
+	var previous_state := arena.state
+	arena.configure_layout(logical_size)
+	hud.size = logical_size
+	_layout_scores(Rect2(usable.position / game_scale, usable.size / game_scale))
+	countdown.position = Vector2(72, arena.layout.center.y - 80)
+	if previous_state != HockeyArena.State.PAUSED and arena.state == HockeyArena.State.PAUSED:
+		_show_pause_panel()
+
+func _safe_area(viewport_size: Vector2) -> Rect2:
 	var usable := Rect2(Vector2.ZERO, viewport_size)
 	if OS.has_feature("android"):
 		var screen_size := Vector2(DisplayServer.screen_get_size())
 		var safe := Rect2(DisplayServer.get_display_safe_area())
 		if screen_size.x > 0.0 and screen_size.y > 0.0 and safe.has_area():
 			var ratio := viewport_size / screen_size
-			usable = Rect2(safe.position * ratio, safe.size * ratio)
-	var fit := minf(usable.size.x / LOGICAL_SIZE.x, usable.size.y / LOGICAL_SIZE.y)
-	content.scale = Vector2.ONE * fit
-	content.position = usable.position + (usable.size - LOGICAL_SIZE * fit) * 0.5
+			var intersection := usable.intersection(Rect2(safe.position * ratio, safe.size * ratio))
+			if intersection.has_area():
+				usable = intersection
+	return usable
+
+func _layout_scores(safe_area: Rect2) -> void:
+	var right := minf(arena.layout.bounds.end.x - 4.0, safe_area.end.x - 8.0)
+	var middle := clampf(arena.layout.center.y, safe_area.position.y + 88.0, safe_area.end.y - 88.0)
+	$Gameplay/HUD/TopScore.position = Vector2(right - 64.0, middle - 76.0)
+	$Gameplay/HUD/BottomScore.position = Vector2(right - 64.0, middle + 12.0)
+
+func _on_score_input(event: InputEvent, button: Button) -> void:
+	# Handle native touches even when mouse emulation is disabled for two players.
+	if event is InputEventScreenTouch:
+		button.accept_event()
+		if event.pressed and not event.canceled:
+			_pause()
 
 func _hide_panels() -> void:
 	menu.hide()
 	setup.hide()
 	settings_panel.hide()
 	overlay.hide()
+	modal_dim.hide()
 
 func _show_menu() -> void:
 	_hide_panels()
 	arena.return_to_menu()
+	gameplay.hide()
 	hud.hide()
 	menu.show()
 	countdown.text = ""
 
 func _show_setup(players: int) -> void:
 	_hide_panels()
+	gameplay.hide()
+	arena.return_to_menu()
 	options.player_count = players
 	$Content/Setup/Title.text = "SOLO MATCH" if players == 1 else "LOCAL DUEL"
 	$Content/Setup/Description.text = "You vs. the machine" if players == 1 else "Two players. One screen."
 	difficulty.visible = players == 1
 	$Content/Setup/DifficultyLabel.visible = players == 1
-	$Content/Setup/Hint.text = "Drag on your half to move.\nStrike the puck into the top goal." if players == 1 else "Sit at opposite ends of the device.\nEach player drags on their own half."
+	$Content/Setup/Hint.text = "Drag on your half to move.\nStrike the puck into the top goal.\nTap either score to pause." if players == 1 else "Sit at opposite ends of the device.\nEach player drags on their own half.\nTap either score to pause."
 	setup.show()
 
 func _start_match() -> void:
 	options.difficulty = difficulty.selected
 	options.winning_score_index = score_target.selected
 	_hide_panels()
+	gameplay.show()
 	hud.show()
-	$Content/HUD/TopName.text = HockeyArena.AI_PROFILES[options.difficulty].display_name.to_upper() + " AI" if options.player_count == 1 else "PLAYER 2"
-	$Content/HUD/BottomName.text = "YOU" if options.player_count == 1 else "PLAYER 1"
-	$Content/HUD/Rule.text = "FIRST TO %d  /  %s" % [options.winning_score(), "SOLO" if options.player_count == 1 else "LOCAL DUEL"]
 	arena.start_match(options)
 
 func _update_score(bottom: int, top: int) -> void:
-	$Content/HUD/BottomScore.text = str(bottom)
-	$Content/HUD/TopScore.text = str(top)
+	$Gameplay/HUD/BottomScore.text = str(bottom)
+	$Gameplay/HUD/TopScore.text = str(top)
 
 func _pause() -> void:
 	if arena.state not in [HockeyArena.State.PLAYING, HockeyArena.State.COUNTDOWN, HockeyArena.State.GOAL]:
@@ -143,10 +193,12 @@ func _show_pause_panel() -> void:
 	$Content/Overlay/Resume.show()
 	$Content/Overlay/Restart.text = "RESTART MATCH"
 	$Content/Overlay/Settings.show()
+	modal_dim.show()
 	overlay.show()
 
 func _resume() -> void:
 	overlay.hide()
+	modal_dim.hide()
 	arena.resume_match()
 
 func _show_result(winner: int) -> void:
@@ -162,12 +214,14 @@ func _show_result(winner: int) -> void:
 	$Content/Overlay/Resume.hide()
 	$Content/Overlay/Restart.text = "REMATCH"
 	$Content/Overlay/Settings.hide()
+	modal_dim.show()
 	overlay.show()
 
 func _show_settings(origin: String) -> void:
 	settings_return = origin
 	_hide_panels()
 	settings_panel.show()
+	modal_dim.visible = origin == "pause"
 
 func _close_settings() -> void:
 	var error := Settings.save()
@@ -204,8 +258,8 @@ func _apply_feedback_visibility() -> void:
 	arena.effects.sparks.visible = not Settings.reduced_effects
 	arena.effects.burst.visible = not Settings.reduced_effects
 	for halo_path in [
-		"Content/Arena/BottomPaddle/Halo", "Content/Arena/TopPaddle/Halo",
-		"Content/Arena/Puck/Halo", "Content/Menu/Preview/CyanPaddle/Halo",
+		"Gameplay/Arena/BottomPaddle/Halo", "Gameplay/Arena/TopPaddle/Halo",
+		"Gameplay/Arena/Puck/Halo", "Content/Menu/Preview/CyanPaddle/Halo",
 		"Content/Menu/Preview/PinkPaddle/Halo", "Content/Menu/Preview/Puck/Halo",
 	]:
 		get_node(halo_path).visible = not Settings.reduced_effects

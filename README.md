@@ -16,7 +16,8 @@ or **F5** to run the project.
   Each player owns one touch until it is released; extra fingers are ignored.
 - Strike the puck into the other player's goal. Paddles stay in their own half.
   After a goal, the conceding player receives the next puck.
-- **Pause** or **Escape / Android Back** pauses a live match. Resume includes
+- **Tap either score** at the right edge, or use **Escape / Android Back**,
+  to pause a live match. Resume includes
   a three-second countdown and preserves the puck's momentum.
 - Use the mouse to click and drag the bottom half for editor testing. Mouse
   testing of local mode controls one paddle at a time; a device is needed for
@@ -36,7 +37,8 @@ Open the scenes in the editor to inspect or change their default appearance.
 | --- | --- |
 | `scenes/main.tscn`, `scripts/main.gd` | Menus, match setup, settings, HUD, overlays, safe-area scaling, Android lifecycle |
 | `scenes/arena.tscn`, `scripts/arena.gd` | Match states, countdowns, scoring, serves, pause, results |
-| `scenes/rink.tscn` | Editor-visible rink, grid, goal openings, and neon lines |
+| `scenes/rink.tscn`, `scripts/rink.gd` | Editor-visible rink geometry, adapted to the display |
+| `scripts/rink_layout.gd` | Shared bounds, goals, courts, starting positions, and resize mapping |
 | `scenes/paddle.tscn`, `scripts/paddle.gd` | Paddle visuals, court limits, movement speed, velocity |
 | `scenes/puck.tscn`, `scripts/puck.gd` | Puck visuals and substepped circle collision simulation |
 | `scripts/touch_controller.gd` | Independent finger ownership and drag offsets |
@@ -53,10 +55,24 @@ Edit the four `resources/ai_*.tres` resources in the Inspector. Higher movement
 speed, lower reaction delay, lower aiming error, and greater prediction weight
 make the opponent harder. AI always obeys the same court boundaries as players.
 
-The logical game canvas is **720 × 1280**, uniformly fitted inside the display's
-safe area. The rink spans `(48, 210)` to `(672, 1130)` with 180-unit-wide goals
-centered at the ends. If changing rink dimensions, update the matching bounds
-in the puck physics, touch controller, paddle courts, and AI prediction.
+Gameplay fills the complete display, with rails only **12 logical units** from
+the edges. Its logical width is **720** and its height follows the display's
+aspect ratio, with uniform scaling to keep the puck and paddles circular.
+Goals are 180 units wide, centered at both ends. The two scores are 64 × 64
+minimum touch targets at the right edge of midfield; either score pauses play.
+Score controls respect display cutouts without shrinking the rink. Menus and
+modal cards remain centered within the safe area; modal dimming covers the
+entire display.
+
+`RinkLayout` provides a single source for bounds, goals, courts, and spawn
+positions. Physics, AI, input, and scene geometry all use the same instance.
+Paddles start 16% of rink height from their respective ends. Serves start at
+35% or 65% of rink height on the conceding player's side.
+
+Resizing an active match pauses it, releases captured fingers, and maps object
+positions proportionally into the new rink. Scores and puck momentum survive;
+resuming uses the normal countdown. Dragging a paddle over a score does not
+activate pause: release that finger and make a fresh tap to pause.
 
 Physics runs at 120 ticks per second. Puck simulation subdivides movement into
 steps of at most eight units at its maximum speed, samples each moving paddle
@@ -79,7 +95,7 @@ godot --headless --editor --path . --import
 godot --headless --path . --export-debug Android builds/G-Hockey-debug.apk
 ```
 
-The preset uses portrait orientation, immersive mode, the package ID
+The preset uses portrait orientation, immersive edge-to-edge display, the package ID
 `com.ghockey.game`, version `0.1.0`, ARM64 for devices, and x86-64 for emulators.
 Vibration is the only requested permission. It contains no ads, networking,
 accounts, purchases, or external services.
@@ -118,23 +134,27 @@ It captures menus, settings, match screens, countdown, pause, results, and
 phone/tablet layouts to `/tmp/ghockey-*.png`. Tests and audio-generation tools
 are excluded from Android exports.
 
-Current validation: **37 gameplay checks passed**. Phone, tablet, and tall-phone
-layouts were rendered at 720 × 1280, 960 × 1280, and 720 × 1620 and inspected.
+Current validation for the full-display update: **341 gameplay checks passed**
+across 720 × 1280, 720 × 1560, 720 × 1620, and 960 × 1280 viewports. Rendered
+phone, tall-phone, and tablet layouts were inspected. Tests cover both score
+buttons in both game modes, touch and mouse dispatch, goal and wall collisions,
+AI court limits, active resizing, safe-area placement, and full-display dimming.
 
-On **2026-10-04**, the Compatibility APK was installed and launched on a real
-**Samsung SM-A176B, Android 16, Mali-G68, 1080 × 2340**. Single-player and local
-two-player gameplay, goals, portrait layout, app backgrounding, return to the
-paused match, resume, and saved settings were observed. No Godot script errors,
-renderer errors, or Android crashes appeared in the collected runtime logs.
-A SurfaceFlinger sample of **126 frame intervals** averaged **60.0 FPS**, with
-**16.669 ms** median, **16.826 ms** 95th percentile, and no intervals above 25 ms.
-This is a short sample, not a sustained thermal or battery benchmark.
+The updated debug APK was installed and tested on **2026-10-04** on a real
+**Samsung SM-A176B, Android 16, Mali-G68, 1080 × 2340**. Screenshots confirmed
+full-display field coverage, circular paddles, readable scores, and centered
+overlays. Both score buttons opened pause, Resume showed the countdown, and
+returning from the background preserved the paused match. ADB touch gestures
+moved both paddles in local two-player mode with aligned coordinates. Runtime
+logs contained no Godot or Android runtime errors.
 
-Hands-on confirmation of two simultaneous physical fingers, sound quality,
+A short SurfaceFlinger sample of 126 frame intervals measured **59.99 FPS**,
+with a median interval of 16.668 ms, a 95th percentile of 16.802 ms, and no
+intervals above 25 ms. This sample does not establish sustained performance.
+
+Hands-on confirmation of simultaneous physical fingers, sound quality,
 vibration feel, system-gesture edge cases, and longer performance sessions
 remains necessary. These cannot be fully verified through screenshots and ADB.
-The earlier Vulkan build failed to display on the emulator's software GPU;
-Compatibility rendering is now the project and final APK default.
 
 ## Original assets
 

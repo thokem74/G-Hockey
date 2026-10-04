@@ -6,13 +6,8 @@ signal goal_scored(player: int)
 
 const RADIUS := 20.0
 const MAX_SPEED := 1800.0
-const GOAL_LEFT := 270.0
-const GOAL_RIGHT := 450.0
-const GOAL_POSTS: Array[Vector2] = [
-	Vector2(270, 210), Vector2(450, 210),
-	Vector2(270, 1130), Vector2(450, 1130),
-]
 
+var layout: RinkLayout
 var velocity := Vector2.ZERO
 var active: bool = false
 var collision_cooldown: float = 0.0
@@ -36,11 +31,11 @@ func simulate(delta: float, paddles: Array[HockeyPaddle]) -> void:
 			var sample := paddle.position - paddle.velocity * step_delta * (steps - step - 1)
 			_collide_paddle(paddle, sample)
 		_collide_walls()
-		if position.y < 180.0:
+		if position.y < layout.bounds.position.y - RADIUS:
 			active = false
 			goal_scored.emit(0)
 			return
-		if position.y > 1160.0:
+		if position.y > layout.bounds.end.y + RADIUS:
 			active = false
 			goal_scored.emit(1)
 			return
@@ -61,30 +56,31 @@ func _collide_paddle(paddle: HockeyPaddle, sample: Vector2) -> void:
 		_emit_impact(absf(incoming), true)
 
 func _collide_walls() -> void:
-	if position.x < 68.0:
-		position.x = 68.0
+	var puck_bounds := layout.bounds.grow(-RADIUS)
+	if position.x < puck_bounds.position.x:
+		position.x = puck_bounds.position.x
 		velocity.x = absf(velocity.x)
 		_emit_impact(absf(velocity.x), false)
-	elif position.x > 652.0:
-		position.x = 652.0
+	elif position.x > puck_bounds.end.x:
+		position.x = puck_bounds.end.x
 		velocity.x = -absf(velocity.x)
 		_emit_impact(absf(velocity.x), false)
 	# The puck must fit fully through the goal; round posts close the corners.
-	for post in GOAL_POSTS:
+	for post in layout.goal_posts:
 		var separation: Vector2 = position - post
-		if separation.length() < RADIUS + 6.0:
+		if separation.length() < RADIUS + RinkLayout.POST_RADIUS:
 			var normal := separation.normalized() if separation.length() > 0.001 else Vector2.DOWN
-			position = post + normal * (RADIUS + 6.1)
+			position = post + normal * (RADIUS + RinkLayout.POST_RADIUS + 0.1)
 			if velocity.dot(normal) < 0.0:
 				velocity = velocity.bounce(normal)
 				_emit_impact(velocity.length(), false)
-	var outside_goal := position.x < GOAL_LEFT or position.x > GOAL_RIGHT
-	if outside_goal and position.y < 230.0 and velocity.y < 0.0:
-		position.y = 230.0
+	var outside_goal := position.x < layout.goal_left or position.x > layout.goal_right
+	if outside_goal and position.y < puck_bounds.position.y and velocity.y < 0.0:
+		position.y = puck_bounds.position.y
 		velocity.y = absf(velocity.y)
 		_emit_impact(absf(velocity.y), false)
-	elif outside_goal and position.y > 1110.0 and velocity.y > 0.0:
-		position.y = 1110.0
+	elif outside_goal and position.y > puck_bounds.end.y and velocity.y > 0.0:
+		position.y = puck_bounds.end.y
 		velocity.y = -absf(velocity.y)
 		_emit_impact(absf(velocity.y), false)
 

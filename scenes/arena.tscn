@@ -16,14 +16,14 @@ script = ExtResource("1")
 [node name="Effects" parent="." instance=ExtResource("5")]
 
 [node name="BottomPaddle" parent="." instance=ExtResource("3")]
-position = Vector2(360, 985)
+position = Vector2(360, 1067.04)
 
 [node name="TopPaddle" parent="." instance=ExtResource("3")]
-position = Vector2(360, 355)
+position = Vector2(360, 212.96)
 neon_color = Color(1, 0.22, 0.55, 1)
 
 [node name="Puck" parent="." instance=ExtResource("4")]
-position = Vector2(360, 780)
+position = Vector2(360, 828.4)
 modulate = Color(0.86, 1, 0.7, 1)
 
 [node name="TouchController" type="Node" parent="."]

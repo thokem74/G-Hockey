@@ -22,7 +22,7 @@ func _run() -> void:
 	await capture(main, "settings")
 	main._start_match()
 	await capture(main, "countdown")
-	var arena := main.get_node("Content/Arena") as HockeyArena
+	var arena := main.get_node("Gameplay/Arena") as HockeyArena
 	arena.set_physics_process(false)
 	arena._physics_process(3.01)
 	await capture(main, "game")
@@ -40,12 +40,21 @@ func _run() -> void:
 	arena._physics_process(3.01)
 	await capture(main, "duel")
 	viewport.size = Vector2i(960, 1280)
+	await get_tree().process_frame
+	main._resume()
+	arena._physics_process(3.01)
 	await capture(main, "tablet")
+	main._pause()
 	main._show_settings("pause")
 	await capture(main, "tablet-settings")
 	viewport.size = Vector2i(720, 1620)
-	main._show_menu()
+	await get_tree().process_frame
+	main._start_match()
+	arena.set_physics_process(false)
+	arena._physics_process(3.01)
 	await capture(main, "tall-phone")
+	main._show_menu()
+	await capture(main, "tall-phone-menu")
 	print("Visual captures saved to /tmp/ghockey-*.png")
 	get_tree().root.get_node("Audio").stop_all()
 	await get_tree().create_timer(0.08).timeout

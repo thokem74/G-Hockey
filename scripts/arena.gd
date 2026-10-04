@@ -28,6 +28,7 @@ var last_count: int = -1
 var conceding_player: int = 0
 var shake_remaining: float = 0.0
 var paddles: Array[HockeyPaddle] = []
+var layout := RinkLayout.new()
 
 @onready var bottom: HockeyPaddle = $BottomPaddle
 @onready var top: HockeyPaddle = $TopPaddle
@@ -35,13 +36,15 @@ var paddles: Array[HockeyPaddle] = []
 @onready var controls: TouchController = $TouchController
 @onready var ai: AIController = $AIController
 @onready var effects: Node2D = $Effects
-@onready var rink: Node2D = $Rink
+@onready var rink: HockeyRink = $Rink
 
 func _ready() -> void:
-	bottom.court = Rect2(90, 714, 540, 374)
-	top.court = Rect2(90, 252, 540, 374)
 	paddles.assign([bottom, top])
 	controls.paddles = paddles
+	controls.layout = layout
+	puck.layout = layout
+	ai.layout = layout
+	configure_layout(layout.logical_size)
 	puck.impact.connect(_on_impact)
 	puck.goal_scored.connect(_on_goal)
 	set_physics_process(false)
@@ -76,6 +79,29 @@ func _physics_process(delta: float) -> void:
 				_reset_round(conceding_player)
 				_begin_countdown()
 
+func configure_layout(logical_size: Vector2) -> void:
+	var previous_bounds := layout.bounds
+	var changed := not logical_size.is_equal_approx(layout.logical_size)
+	var preserve_match := state != State.MENU
+	if changed and state in [State.PLAYING, State.COUNTDOWN, State.GOAL]:
+		pause_match()
+	layout.configure(logical_size)
+	bottom.court = layout.paddle_court(0, HockeyPaddle.RADIUS)
+	top.court = layout.paddle_court(1, HockeyPaddle.RADIUS)
+	rink.apply_layout(layout)
+	if changed and preserve_match:
+		for paddle in paddles:
+			var remapped := layout.remap_position(paddle.position, previous_bounds)
+			remapped.x = clampf(remapped.x, paddle.court.position.x, paddle.court.end.x)
+			remapped.y = clampf(remapped.y, paddle.court.position.y, paddle.court.end.y)
+			paddle.reset_at(remapped)
+		puck.position = layout.remap_position(puck.position, previous_bounds)
+		controls.clear()
+		ai.reset()
+		effects.clear()
+	elif state == State.MENU:
+		_reset_round(0)
+
 func start_match(match_options: MatchOptions) -> void:
 	options = match_options.duplicate() as MatchOptions
 	controls.player_count = options.player_count
@@ -101,7 +127,8 @@ func return_to_menu() -> void:
 func pause_match() -> void:
 	if state not in [State.PLAYING, State.COUNTDOWN, State.GOAL]:
 		return
-	paused_state = state
+	# A second pause during a resume countdown must retain a pending goal reset.
+	paused_state = countdown_destination if state == State.COUNTDOWN else state
 	state = State.PAUSED
 	puck.active = false
 	controls.clear()
@@ -133,9 +160,9 @@ func handle_input(event: InputEvent) -> void:
 		controls.drag(-1, get_global_transform_with_canvas().affine_inverse() * event.position)
 
 func _reset_round(server: int) -> void:
-	bottom.reset_at(Vector2(360, 985))
-	top.reset_at(Vector2(360, 355))
-	puck.reset_at(Vector2(360, 820 if server == 0 else 520))
+	bottom.reset_at(layout.paddle_start(0))
+	top.reset_at(layout.paddle_start(1))
+	puck.reset_at(layout.serve_position(server))
 	controls.clear()
 	ai.reset()
 	effects.clear()
@@ -155,7 +182,7 @@ func _on_goal(player: int) -> void:
 	controls.clear()
 	score_changed.emit(scores[0], scores[1])
 	var color := CYAN if player == 0 else MAGENTA
-	effects.celebrate(Vector2(360, 210 if player == 0 else 1130), color)
+	effects.celebrate(layout.goal_position(player), color)
 	shake_remaining = 0.22
 	if Settings.vibration and OS.has_feature("android"):
 		Input.vibrate_handheld(65)

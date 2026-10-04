@@ -3,6 +3,7 @@ extends Node
 
 var paddles: Array[HockeyPaddle] = []
 var player_count: int = 1
+var layout: RinkLayout
 var fingers: Dictionary = {}
 var offsets: Dictionary = {}
 
@@ -13,9 +14,9 @@ func clear() -> void:
 		paddle.target = paddle.position
 
 func press(finger: int, point: Vector2) -> void:
-	if not Rect2(48, 210, 624, 920).has_point(point):
+	if not layout.bounds.has_point(point):
 		return
-	var player := 0 if point.y >= 670.0 else 1
+	var player := 0 if point.y >= layout.center.y else 1
 	if player == 1 and player_count == 1:
 		return
 	if fingers.values().has(player):
